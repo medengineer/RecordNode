@@ -1,16 +1,35 @@
-cmake_minimum_required(VERSION 3.5.0)
-project(oe_plugin)
+# Setup the minimum version required of CMake to generate the Makefile:
+# Raises a FATAL_ERROR if version < 3.5
+cmake_minimum_required(VERSION 3.5.0 FATAL_ERROR)
+
+# Setup the name for our project.
+# Set code language as second param
+project(RecordNode CXX)
+
+# Set the project source dir (just convention)
+set( RECORDNODE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../Source)
+set( RECORDNODE_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR} )
+
+# Set the current version of the code
+set ( RECORDNODE_VERSION_MAJOR 0)
+set ( RECORDNODE_VERSION_MINOR 1)
+set ( RECORDNODE_VERSION_PATCH 0)
+
+# Set the plugin name
+set(PLUGIN_NAME RecordNode)
+
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 	set(LINUX 1)
 endif()
 
-#change this line to modify the plugin name
-set(PLUGIN_NAME OEPlugin)
-#change this if the base GUI code is located somewhere else
 set(GUI_BASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../plugin-GUI)
+set(GUI_DEBUG_DIR ${GUI_BASE_DIR}/Builds/VisualStudio2013/x64/Debug/bin/plugins)
 
-include_directories(${GUI_BASE_DIR}/JuceLibraryCode ${GUI_BASE_DIR}/JuceLibraryCode/modules ${GUI_BASE_DIR}/Source/Plugins/Headers)
+include_directories(
+	${GUI_BASE_DIR}/JuceLibraryCode
+	${GUI_BASE_DIR}/JuceLibraryCode/modules
+	${GUI_BASE_DIR}/Source/Plugins/Headers)
 
 set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
 	OEPLUGIN
@@ -22,9 +41,7 @@ set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
 	$<$<CONFIG:Release>:NDEBUG=1>
 	)
 
-
-set(SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../Source)
-file(GLOB_RECURSE SRC_FILES LIST_DIRECTORIES false "${SOURCE_PATH}/*.cpp" "${SOURCE_PATH}/*.h")
+file(GLOB_RECURSE SRC_FILES LIST_DIRECTORIES false "${RECORDNODE_SOURCE_DIR}/*.cpp" "${RECORDNODE_SOURCE_DIR}/*.h")
 
 if (APPLE)
 	add_library(${PLUGIN_NAME} MODULE ${SRC_FILES})
@@ -71,7 +88,7 @@ endif()
 
 foreach( src_file IN ITEMS ${SRC_FILES})
 	get_filename_component(src_path "${src_file}" PATH)
-	file(RELATIVE_PATH src_path_rel "${SOURCE_PATH}" "${src_path}")
+	file(RELATIVE_PATH src_path_rel "${RECORDNODE_SOURCE_DIR}" "${src_path}")
 	string(REPLACE "/" "\\" group_name "${src_path_rel}")
 	source_group("${group_name}" FILES "${src_file}")
 endforeach()
