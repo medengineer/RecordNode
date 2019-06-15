@@ -2,35 +2,51 @@
 #ifndef RECORDNODE_H_DEFINED
 #define RECORDNODE_H_DEFINED
 
+#include <chrono>
+#include <math.h>
+
 #include <ProcessorHeaders.h>
+#include "RecordNodeEditor.h"
+
+#define MAX_BUFFER_SIZE 40960
+#define NIDAQ_BIT_VOLTS 0.001221f
+#define NPX_BIT_VOLTS	0.195f
+#define CHANNELS_PER_THREAD 384
 
 class RecordNode : public GenericProcessor
 {
+
 public:
-	/** The class constructor, used to initialize any members. */
+
 	RecordNode();
 
-	/** The class destructor, used to deallocate memory */
 	~RecordNode();
 
-	/** Defines the functionality of the processor.
+	AudioProcessorEditor* createEditor() override;
 
-	The process method is called every time a new data buffer is available.
+	bool hasEditor() const override { return true; }
 
-	Processors can either use this method to add new data, manipulate existing
-	data, or send data to an external target (such as a display or other hardware).
+	void prepareToPlay(double sampleRate, int estimatedSamplesPerBlock);
 
-	Continuous signals arrive in the "buffer" variable, event data (such as TTLs
-	and spikes) is contained in the "events" variable.
-	*/
 	void process(AudioSampleBuffer& buffer) override;
 
-	/** Any variables used by the "process" function _must_ be modified only through
-	this method while data acquisition is active. If they are modified in any
-	other way, the application will crash.  */
 	void setParameter(int parameterIndex, float newValue) override;
 
+	int64 scaleTime;
+	int64 convertTime;
+	int64 writeTime;
+
 private:
+
+	int numChannels;
+	int numSamples;
+
+	AudioSampleBuffer rawBufferCopy;
+
+	float scaleFactor;
+	HeapBlock<float> scaledBuffer;  
+	HeapBlock<int16> intBuffer;
+
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RecordNode);
 
 };
