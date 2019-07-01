@@ -54,6 +54,8 @@ public:
 private:
 	void fillTimestamps(int channel, int index, int size, int64 timestamp);
 
+	int lastIdx;
+
 	OwnedArray<AbstractFifo> m_fifos;
 	AudioSampleBuffer m_buffer;
 	Array<int> m_readSamples;

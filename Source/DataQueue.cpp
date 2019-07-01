@@ -113,6 +113,11 @@ void DataQueue::writeChannel(const AudioSampleBuffer& buffer, int channel, int n
 {
 	int index1, size1, index2, size2;
 	m_fifos[channel]->prepareToWrite(nSamples, index1, size1, index2, size2);
+	if (!(lastIdx == index1))
+	{
+		lastIdx = index1;
+		printf("Idx1: %d, Size1: %d, Idx2: %d, Size2 %d\n", index1, size1, index2, size2); fflush(stdout);
+	}
 	if ((size1 + size2) < nSamples)
 	{ //TODO: turn this into a proper notification. Probably returning a bool.
 		std::cerr << "Recording Data Queue Overflow" << std::endl;

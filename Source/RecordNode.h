@@ -7,11 +7,18 @@
 
 #include <ProcessorHeaders.h>
 #include "RecordNodeEditor.h"
+#include "DataQueue.h"
+#include "RecordThread.h"
 
-#define MAX_BUFFER_SIZE 40960
-#define NIDAQ_BIT_VOLTS 0.001221f
-#define NPX_BIT_VOLTS	0.195f
-#define CHANNELS_PER_THREAD 384
+#define NIDAQ_BIT_VOLTS			0.001221f
+#define NPX_BIT_VOLTS			0.195f
+
+#define MAX_BUFFER_SIZE			40960
+#define CHANNELS_PER_THREAD		384
+#define WRITE_BLOCK_LENGTH		1024
+#define DATA_BUFFER_NBLOCKS		300
+#define EVENT_BUFFER_NEVENTS	512
+#define SPIKE_BUFFER_NSPIKES	512
 
 class RecordNode : public GenericProcessor
 {
@@ -41,7 +48,12 @@ private:
 	int numChannels;
 	int numSamples;
 
-	AudioSampleBuffer rawBufferCopy;
+	ScopedPointer<RecordThread> recordThread;
+	ScopedPointer<DataQueue> dataQueue;
+
+	std::atomic<bool> setFirstBlock;
+
+	Array<int> channelMap;
 
 	float scaleFactor;
 	HeapBlock<float> scaledBuffer;  
