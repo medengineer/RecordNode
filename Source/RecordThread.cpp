@@ -62,6 +62,8 @@ void RecordThread::setChannelMap(const Array<int>& channels)
 		return;
 	m_channelArray = channels;
 	m_numChannels = channels.size();
+	m_engine->setChannelMapping(channels);
+	m_engine->directoryChanged();
 }
 
 /*
@@ -92,11 +94,12 @@ void RecordThread::run()
 	//1-Wait until the first block has arrived, so we can align the timestamps
 	while (!m_receivedFirstBlock && !threadShouldExit())
 	{
-		printf("Waiting for first block...\n");
+		printf("\rWaiting for first block..."); fflush(stdout);
 		wait(1);
 	}
 
 	//2-Open Files 
+	printf("RecordThread::run()::Opening Files...\n");
 	if (!threadShouldExit())
 	{
 		m_cleanExit = false;
@@ -105,11 +108,14 @@ void RecordThread::run()
 		m_dataQueue->getTimestampsForBlock(0, timestamps);
 
 		//EVERY_ENGINE->updateTimestamps(timestamps);
-		//m_engine->updateTimestamps(timestamps);
+		m_engine->updateTimestamps(timestamps);
 		//EVERY_ENGINE->openFiles(m_rootFolder, m_experimentNumber, m_recordingNumber);
-		//m_engine->openFiles(m_rootFolder, m_experimentNumber, m_recordingNumber);
+		printf("Root: %s, Exp: %d Rec: %d\n", m_rootFolder.getFullPathName(), m_experimentNumber, m_recordingNumber);
+		m_engine->openFiles(m_rootFolder, m_experimentNumber, m_recordingNumber);
 	}
 	//3-Normal loop
+	printf("RecordThread::run()::Finished opening files...\n");
+	printf("RecordThread::run()::Entering normal loop...\n");
 	while (!threadShouldExit())
 	{
 		writeData(dataBuffer, BLOCK_MAX_WRITE_SAMPLES, BLOCK_MAX_WRITE_EVENTS, BLOCK_MAX_WRITE_SPIKES);
@@ -122,7 +128,7 @@ void RecordThread::run()
 		std::cout << "Closing files" << std::endl; fflush(stdout);
 		//5-Close files
 		//EVERY_ENGINE->closeFiles();
-		//m_engine->closeFiles();
+		m_engine->closeFiles();
 	}
 	m_cleanExit = true;
 	m_receivedFirstBlock = false;
@@ -134,9 +140,9 @@ void RecordThread::writeData(const AudioSampleBuffer& dataBuffer, int maxSamples
 	Array<CircularBufferIndexes> idx;
 	m_dataQueue->startRead(idx, timestamps, maxSamples);
 	//EVERY_ENGINE->updateTimestamps(timestamps);
-	//m_engine->updateTimestamps(timestamps);
+	m_engine->updateTimestamps(timestamps);
 	//EVERY_ENGINE->startChannelBlock(lastBlock);
-	//m_engine->startChannelBlock(lastBlock);
+	m_engine->startChannelBlock(lastBlock);
 	for (int chan = 0; chan < m_numChannels; ++chan)
 	{
 		/*

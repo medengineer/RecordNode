@@ -134,8 +134,9 @@ public:
 
 	/** Called prior to opening files, to set the map between recorded
 	channels and actual channel numbers
-	*/
 	void setChannelMapping(const Array<int>& channels, const Array<int>& chanProcessor, const Array<int>& chanOrder, OwnedArray<RecordProcessorInfo>& processors);
+	*/
+	void setChannelMapping(const Array<int>& channels);
 
 	/** Called after all channels and spike groups have been registered,
 	just before acquisition starts */

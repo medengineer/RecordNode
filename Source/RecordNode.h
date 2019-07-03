@@ -30,10 +30,15 @@ public:
 	~RecordNode();
 
 	AudioProcessorEditor* createEditor() override;
-
 	bool hasEditor() const override { return true; }
 
 	void prepareToPlay(double sampleRate, int estimatedSamplesPerBlock);
+
+	String generateDirectoryName();
+	void createNewDirectory();
+	String generateDateString() const;
+	int getExperimentNumber() const;
+	int getRecordingNumber() const;
 
 	void process(AudioSampleBuffer& buffer) override;
 
@@ -50,6 +55,14 @@ public:
 	int64 writeTime;
 
 private:
+
+	bool isRecording;
+
+	File dataDirectory;
+	File rootFolder;
+	bool newDirectoryNeeded;
+	int experimentNumber;
+	int recordingNumber;
 
 	int numChannels;
 	int numSamples;
