@@ -20,6 +20,8 @@
 #define EVENT_BUFFER_NEVENTS	512
 #define SPIKE_BUFFER_NSPIKES	512
 
+#define PROCESS_TIMEOUT         10000
+
 class RecordNode : public GenericProcessor
 {
 
@@ -37,8 +39,11 @@ public:
 
 	void process(AudioSampleBuffer& buffer) override;
 
+	bool isProcessing();
+
 	void setParameter(int parameterIndex, float newValue) override;
 
+	int64 lastProcessStart;
 	int64 processTime;
 	int64 scaleTime;
 	int64 convertTime;

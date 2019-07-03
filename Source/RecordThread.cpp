@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "RecordNode.h"
 
 //#define EVERY_ENGINE for(int eng = 0; eng < m_engineArray.size(); eng++) m_engineArray[eng]
+#define EVERY_ENGINE m_engine;
 
 
 RecordThread::RecordThread() :

@@ -50,11 +50,16 @@ void RecordNode::setParameter(int parameterIndex, float newValue)
 
 }
 
+bool RecordNode::isProcessing()
+{
+	return fabs(double(Time::getHighResolutionTicks() - lastProcessStart)) < PROCESS_TIMEOUT;
+}
+
 	
 void RecordNode::process(AudioSampleBuffer& buffer)
 {
 
-	int64 processStart = Time::getHighResolutionTicks();
+	lastProcessStart = Time::getHighResolutionTicks();
 
 	if (!numChannels || !numSamples)
 	{
@@ -89,7 +94,7 @@ void RecordNode::process(AudioSampleBuffer& buffer)
 		setFirstBlock = true;
 	}
 
-	processTime = Time::getHighResolutionTicks() - processStart;
+	processTime = Time::getHighResolutionTicks() - lastProcessStart;
 }
 
 
