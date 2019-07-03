@@ -39,6 +39,7 @@ public:
 
 	void setParameter(int parameterIndex, float newValue) override;
 
+	int64 processTime;
 	int64 scaleTime;
 	int64 convertTime;
 	int64 writeTime;

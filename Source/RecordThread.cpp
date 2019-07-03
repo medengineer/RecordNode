@@ -105,7 +105,7 @@ void RecordThread::run()
 	//3-Normal loop
 	while (!threadShouldExit())
 	{
-		//printf("Writing data...\n");
+		printf("\rWriting data..."); fflush(stdout);
 		writeData(dataBuffer, BLOCK_MAX_WRITE_SAMPLES, BLOCK_MAX_WRITE_EVENTS, BLOCK_MAX_WRITE_SPIKES);
 	}
 	std::cout << "Exiting record thread" << std::endl;
@@ -114,7 +114,7 @@ void RecordThread::run()
 	{
 		writeData(dataBuffer, -1, -1, -1, true);
 
-		std::cout << "Closing files" << std::endl;
+		std::cout << "Closing files" << std::endl; fflush(stdout);
 		//5-Close files
 		//EVERY_ENGINE->closeFiles();
 	}

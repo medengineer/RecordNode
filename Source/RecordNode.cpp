@@ -32,8 +32,7 @@ AudioProcessorEditor* RecordNode::createEditor()
 
 void RecordNode::prepareToPlay(double sampleRate, int estimatedSamplesPerBlock)
 {
-	//recordThread->setChannelMap(channelMap); //probably dont need this anymore
-
+	/* This gets called right when the play button is pressed*/
 	recordThread->setFirstBlockFlag(false);
 	setFirstBlock = false;
 
@@ -48,19 +47,14 @@ void RecordNode::setParameter(int parameterIndex, float newValue)
 		Parameter* p = parameters[parameterIndex];
 		p->setValue(newValue, currentChannel);
 	}
+
 }
 
 	
 void RecordNode::process(AudioSampleBuffer& buffer)
 {
 
-
-	if (CoreServices::getAcquisitionStatus() == false)
-	{
-		recordThread->stopThread(1);
-	}
-	else if (!recordThread->isThreadRunning())
-		recordThread->startThread();
+	int64 processStart = Time::getHighResolutionTicks();
 
 	if (!numChannels || !numSamples)
 	{
@@ -69,19 +63,24 @@ void RecordNode::process(AudioSampleBuffer& buffer)
 		dataQueue->setChannels(numChannels);
 
 		for (int ch = 0; ch < numChannels; ch++)
-		{
 			channelMap.add(ch);
-		}
+		recordThread->setChannelMap(channelMap);
 
 	}
 
-	int64 t1 = Time::getHighResolutionTicks();
-	int timestamp = t1;
+	printf("Acquisition status: %d", CoreServices::getAcquisitionStatus());
+	if (!CoreServices::getAcquisitionStatus())
+	{
+		printf("******Called thread should exit!\n");
+		recordThread->signalThreadShouldExit();
+	}
+	else if (!recordThread->isThreadRunning())
+		recordThread->startThread();
 
 	for (int ch = 0; ch < numChannels; ch++)
 	{
-		//printf("Processing channel %d\n", ch); 
-		dataQueue->writeChannel(buffer, ch, numSamples);
+		int64 timestamp = getTimestamp(ch);
+		dataQueue->writeChannel(buffer, ch, numSamples, timestamp);
 	}
 
 	if (!setFirstBlock)
@@ -90,23 +89,7 @@ void RecordNode::process(AudioSampleBuffer& buffer)
 		setFirstBlock = true;
 	}
 
-	scaleTime = Time::getHighResolutionTicks() - t1;
-
-	//for (int channel = 0; channel < numChannels; channel++)
-	//{
-	//	dataQueue->writeChannel(buffer, channel, numSamples);
-	//}
-
-	/*
-	for (int i = 0; i < recordThreads.size(); i++)
-	{
-		recordThreads[i]->setNumSamples(buffer.getNumSamples());
-		recordThreads[i]->setNumChannels(CHANNELS_PER_THREAD);
-		recordThreads[i]->setChannelOffset(CHANNELS_PER_THREAD * i);
-		recordThreads[i]->setBuffer(buffer);
-		recordThreads[i]->startThread();
-	}
-	*/
+	processTime = Time::getHighResolutionTicks() - processStart;
 }
 
 

@@ -84,7 +84,7 @@ RecordNodeEditor::~RecordNodeEditor()
 
 void RecordNodeEditor::timerCallback()
 {
-	scaleTimeLabel->setText(String(recordNode->scaleTime), dontSendNotification);
+	scaleTimeLabel->setText(String(recordNode->processTime), dontSendNotification);
 	/*
 	if (recordThread != nullptr && recordThread->isThreadRunning())
 	{
