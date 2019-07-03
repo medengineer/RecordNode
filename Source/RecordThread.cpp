@@ -30,13 +30,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#define EVERY_ENGINE for(int eng = 0; eng < m_engineArray.size(); eng++) m_engineArray[eng]
 #define EVERY_ENGINE m_engine;
 
-
 RecordThread::RecordThread() :
 Thread("Record Thread"),
 //m_engineArray(engines),
 m_receivedFirstBlock(false),
 m_cleanExit(true)
 {
+	m_engine = new BinaryRecording();
 }
 
 RecordThread::~RecordThread()
@@ -46,7 +46,10 @@ RecordThread::~RecordThread()
 void RecordThread::setFileComponents(File rootFolder, int experimentNumber, int recordingNumber)
 {
 	if (isThreadRunning())
+	{
+		std::cout << "Tried to set file components while thread was running!" << std::endl;
 		return;
+	}
 
 	m_rootFolder = rootFolder;
 	m_experimentNumber = experimentNumber;
@@ -83,6 +86,7 @@ void RecordThread::setFirstBlockFlag(bool state)
 
 void RecordThread::run()
 {
+	printf("Started RecordThread!\n"); fflush(stdout);
 	const AudioSampleBuffer& dataBuffer = m_dataQueue->getAudioBufferReference();
 	bool closeEarly = true;
 	//1-Wait until the first block has arrived, so we can align the timestamps
@@ -101,12 +105,13 @@ void RecordThread::run()
 		m_dataQueue->getTimestampsForBlock(0, timestamps);
 
 		//EVERY_ENGINE->updateTimestamps(timestamps);
+		//m_engine->updateTimestamps(timestamps);
 		//EVERY_ENGINE->openFiles(m_rootFolder, m_experimentNumber, m_recordingNumber);
+		//m_engine->openFiles(m_rootFolder, m_experimentNumber, m_recordingNumber);
 	}
 	//3-Normal loop
 	while (!threadShouldExit())
 	{
-		printf("\rWriting data..."); fflush(stdout);
 		writeData(dataBuffer, BLOCK_MAX_WRITE_SAMPLES, BLOCK_MAX_WRITE_EVENTS, BLOCK_MAX_WRITE_SPIKES);
 	}
 	std::cout << "Exiting record thread" << std::endl;
@@ -114,10 +119,10 @@ void RecordThread::run()
 	if (!closeEarly)
 	{
 		writeData(dataBuffer, -1, -1, -1, true);
-
 		std::cout << "Closing files" << std::endl; fflush(stdout);
 		//5-Close files
 		//EVERY_ENGINE->closeFiles();
+		//m_engine->closeFiles();
 	}
 	m_cleanExit = true;
 	m_receivedFirstBlock = false;
@@ -129,24 +134,30 @@ void RecordThread::writeData(const AudioSampleBuffer& dataBuffer, int maxSamples
 	Array<CircularBufferIndexes> idx;
 	m_dataQueue->startRead(idx, timestamps, maxSamples);
 	//EVERY_ENGINE->updateTimestamps(timestamps);
+	//m_engine->updateTimestamps(timestamps);
 	//EVERY_ENGINE->startChannelBlock(lastBlock);
+	//m_engine->startChannelBlock(lastBlock);
 	for (int chan = 0; chan < m_numChannels; ++chan)
 	{
 		/*
 		if (idx[chan].size1 > 0)
 		{
-			EVERY_ENGINE->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index1), idx[chan].size1);
+			//EVERY_ENGINE->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index1), idx[chan].size1);
+			m_engine->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index1), idx[chan].size1);
 			if (idx[chan].size2 > 0)
 			{
 				timestamps.set(chan, timestamps[chan] + idx[chan].size1);
-				EVERY_ENGINE->updateTimestamps(timestamps, chan);
-				EVERY_ENGINE->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index2), idx[chan].size2);
+				//EVERY_ENGINE->updateTimestamps(timestamps, chan);
+				m_engine->updateTimestamps(timestamps, chan);
+				//EVERY_ENGINE->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index2), idx[chan].size2);
+				m_engine->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index2), idx[chan].size2);
 			}
 		}
 		*/
 	}
 	m_dataQueue->stopRead();
 	//EVERY_ENGINE->endChannelBlock(lastBlock);
+	//m_engine->endChannelBlock(lastBlock);
 
 	/*
 	std::vector<EventMessagePtr> events;
@@ -182,5 +193,6 @@ void RecordThread::forceCloseFiles()
 		return;
 
 	//EVERY_ENGINE->closeFiles();
+	m_engine->closeFiles();
 	m_cleanExit = true;
 }

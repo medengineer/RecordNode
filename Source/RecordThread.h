@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RECORDTHREAD_H_INCLUDED
 
 #include "../../../JuceLibraryCode/JuceHeader.h"
+#include "BinaryRecording.h"
 //#include "EventQueue.h"
 #include "DataQueue.h"
 #include <atomic>
@@ -56,6 +57,7 @@ private:
 	void writeData(const AudioSampleBuffer& buffer, int maxSamples, int maxEvents, int maxSpikes, bool lastBlock = false);
 
 	//const OwnedArray<RecordEngine>& m_engineArray;
+	ScopedPointer<RecordEngine> m_engine;
 	Array<int> m_channelArray;
 
 	DataQueue* m_dataQueue;

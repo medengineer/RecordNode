@@ -308,6 +308,76 @@ void BinaryRecording::writeData(int writeChannel, int realChannel, const float* 
 	}
 }
 
+void BinaryRecording::writeEvent(int eventIndex, const MidiMessage& event)
+{
+	/*
+	EventPtr ev = Event::deserializeFromMessage(event, getEventChannel(eventIndex));
+	EventRecording* rec = m_eventFiles[eventIndex];
+	if (!rec) return;
+	const EventChannel* info = getEventChannel(eventIndex);
+	int64 ts = ev->getTimestamp();
+	rec->timestampFile->writeData(&ts, sizeof(int64));
+
+	uint16 chan = ev->getChannel() + 1;
+	rec->channelFile->writeData(&chan, sizeof(uint16));
+
+	if (ev->getEventType() == EventChannel::TTL)
+	{
+		TTLEvent* ttl = static_cast<TTLEvent*>(ev.get());
+		int16 data = (ttl->getChannel() + 1) * (ttl->getState() ? 1 : -1);
+		rec->mainFile->writeData(&data, sizeof(int16));
+		if (rec->extraFile)
+			rec->extraFile->writeData(ttl->getTTLWordPointer(), info->getDataSize());
+	}
+	else
+	{
+		rec->mainFile->writeData(ev->getRawDataPointer(), info->getDataSize());
+	}
+
+	writeEventMetaData(ev.get(), rec->metaDataFile);
+	increaseEventCounts(rec);
+	*/
+}
+
+void BinaryRecording::addSpikeElectrode(int index, const SpikeChannel* elec)
+{
+}
+
+void BinaryRecording::writeSpike(int electrodeIndex, const SpikeEvent* spike)
+{
+	/*
+	const SpikeChannel* channel = getSpikeChannel(electrodeIndex);
+	EventRecording* rec = m_spikeFiles[m_spikeFileIndexes[electrodeIndex]];
+	uint16 spikeChannel = m_spikeChannelIndexes[electrodeIndex];
+
+	int totalSamples = channel->getTotalSamples() * channel->getNumChannels();
+
+
+	if (totalSamples > m_bufferSize) //Shouldn't happen, and if it happens it'll be slow, but better this than crashing. Will be reset on file close and reset.
+	{
+		std::cerr << "(spike) Write buffer overrun, resizing to" << totalSamples << std::endl;
+		m_bufferSize = totalSamples;
+		m_scaledBuffer.malloc(totalSamples);
+		m_intBuffer.malloc(totalSamples);
+	}
+	double multFactor = 1 / (float(0x7fff) * channel->getChannelBitVolts(0));
+	FloatVectorOperations::copyWithMultiply(m_scaledBuffer.getData(), spike->getDataPointer(), multFactor, totalSamples);
+	AudioDataConverters::convertFloatToInt16LE(m_scaledBuffer.getData(), m_intBuffer.getData(), totalSamples);
+	rec->mainFile->writeData(m_intBuffer.getData(), totalSamples*sizeof(int16));
+
+	int64 ts = spike->getTimestamp();
+	rec->timestampFile->writeData(&ts, sizeof(int64));
+
+	rec->channelFile->writeData(&spikeChannel, sizeof(uint16));
+
+	uint16 sortedID = spike->getSortedID();
+	rec->extraFile->writeData(&sortedID, sizeof(uint16));
+	writeEventMetaData(spike, rec->metaDataFile);
+
+	increaseEventCounts(rec);
+	*/
+}
+
 void BinaryRecording::writeTimestampSyncText(uint16 sourceID, uint16 sourceIdx, int64 timestamp, float, String text)
 {
 	if (!m_syncTextFile)

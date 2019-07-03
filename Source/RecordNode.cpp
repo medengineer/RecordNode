@@ -17,6 +17,9 @@ scaleTime(0), convertTime(0), writeTime(0)
 	numChannels = 0;
 	numSamples = 0;
 
+	processLoopCounter = 0;
+	lastProcessStart = -1; 
+
 }
 
 RecordNode::~RecordNode()
@@ -33,6 +36,10 @@ AudioProcessorEditor* RecordNode::createEditor()
 void RecordNode::prepareToPlay(double sampleRate, int estimatedSamplesPerBlock)
 {
 	/* This gets called right when the play button is pressed*/
+	File rootFolder = File::getCurrentWorkingDirectory();
+	int recordingNumber = 1337;
+	int experimentNumber = 1337;
+	recordThread->setFileComponents(rootFolder, recordingNumber, experimentNumber);
 	recordThread->setFirstBlockFlag(false);
 	setFirstBlock = false;
 
@@ -50,16 +57,24 @@ void RecordNode::setParameter(int parameterIndex, float newValue)
 
 }
 
-bool RecordNode::isProcessing()
+void RecordNode::startRecording()
 {
-	return fabs(double(Time::getHighResolutionTicks() - lastProcessStart)) < PROCESS_TIMEOUT;
+	printf("*******Called start recording!!!\n");
+	recordThread->startThread();
 }
 
+void RecordNode::stopRecording()
+{
+	printf("******Called stop recording!!!\n");
+	if (recordThread->isThreadRunning())
+	{
+		recordThread->signalThreadShouldExit();
+		recordThread->waitForThreadToExit(2000);
+	}
+}
 	
 void RecordNode::process(AudioSampleBuffer& buffer)
 {
-
-	lastProcessStart = Time::getHighResolutionTicks();
 
 	if (!numChannels || !numSamples)
 	{
@@ -73,15 +88,6 @@ void RecordNode::process(AudioSampleBuffer& buffer)
 
 	}
 
-	printf("Acquisition status: %d", CoreServices::getAcquisitionStatus());
-	if (!CoreServices::getAcquisitionStatus())
-	{
-		printf("******Called thread should exit!\n");
-		recordThread->signalThreadShouldExit();
-	}
-	else if (!recordThread->isThreadRunning())
-		recordThread->startThread();
-
 	for (int ch = 0; ch < numChannels; ch++)
 	{
 		int64 timestamp = getTimestamp(ch);
@@ -94,7 +100,6 @@ void RecordNode::process(AudioSampleBuffer& buffer)
 		setFirstBlock = true;
 	}
 
-	processTime = Time::getHighResolutionTicks() - lastProcessStart;
 }
 
 
