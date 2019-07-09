@@ -10,15 +10,15 @@
 #include "DataQueue.h"
 #include "RecordThread.h"
 
-#define NIDAQ_BIT_VOLTS			0.001221f
-#define NPX_BIT_VOLTS			0.195f
-
-#define MAX_BUFFER_SIZE			40960
-#define CHANNELS_PER_THREAD		384
 #define WRITE_BLOCK_LENGTH		1024
 #define DATA_BUFFER_NBLOCKS		300
 #define EVENT_BUFFER_NEVENTS	512
 #define SPIKE_BUFFER_NSPIKES	512
+
+#define NIDAQ_BIT_VOLTS			0.001221f
+#define NPX_BIT_VOLTS			0.195f
+#define MAX_BUFFER_SIZE			40960
+#define CHANNELS_PER_THREAD		384
 
 class RecordNode : public GenericProcessor
 {
@@ -26,7 +26,6 @@ class RecordNode : public GenericProcessor
 public:
 
 	RecordNode();
-
 	~RecordNode();
 
 	AudioProcessorEditor* createEditor() override;
@@ -47,9 +46,6 @@ public:
 
 	void setParameter(int parameterIndex, float newValue) override;
 
-	int64 processLoopCounter;
-	int64 lastProcessStart;
-	int64 processTime;
 	int64 scaleTime;
 	int64 convertTime;
 	int64 writeTime;

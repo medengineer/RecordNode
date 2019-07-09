@@ -84,16 +84,20 @@ RecordNodeEditor::~RecordNodeEditor()
 
 void RecordNodeEditor::timerCallback()
 {
-	scaleTimeLabel->setText(String(recordNode->scaleTime), dontSendNotification);
-	/*
-	if (recordThread != nullptr && recordThread->isThreadRunning())
+
+	int scaleTime = recordNode->scaleTime;
+	int convertTime = recordNode->convertTime;
+	int writeTime = recordNode->writeTime;
+
+	float total = (scaleTime + convertTime + writeTime) / 100;
+
+	if (total > 0)
 	{
-		BenchmarkInfo* info = recordThread->getInfo();
-		scaleTimeLabel->setText(String(info->scaleTime), dontSendNotification);
-		convertTimeLabel->setText(String(info->convertTime), dontSendNotification);
-		writeTimeLabel->setText(String(info->writeTime), dontSendNotification);
+		scaleTimeLabel->setText(String(scaleTime / total), dontSendNotification);
+		convertTimeLabel->setText(String(convertTime / total), dontSendNotification);
+		writeTimeLabel->setText(String(writeTime / total), dontSendNotification);
 	}
-	*/
+
 }
 
 

@@ -1,5 +1,7 @@
 #include "BinaryRecording.h"
 
+#define TIC std::chrono::high_resolution_clock::now()
+
 #define MAX_BUFFER_SIZE 40960
 
 BinaryRecording::BinaryRecording()
@@ -121,7 +123,7 @@ void BinaryRecording::openFiles(File rootFolder, int experimentNumber, int recor
 	for (int i = 0; i < nFiles; i++)
 	{
 		int numChannels = jsonChannels.getReference(i).size();
-		printf("nFiles %d, numChannels: %d\n", nFiles, numChannels);
+		printf("numChannels: %d samplesPerBlock: %d\n", numChannels, samplesPerBlock);
 		ScopedPointer<SequentialBlockFile> blockFile = new SequentialBlockFile(numChannels, samplesPerBlock);
 		if (blockFile->openFile(continousFileNames[i]))
 			m_DataFiles.add(blockFile.release());
@@ -199,7 +201,6 @@ String BinaryRecording::jsonTypeValue(BaseType type)
 		return String::empty;
 	}
 }
-
 
 void BinaryRecording::createChannelMetaData(const MetaDataInfoObject* channel, DynamicObject* jsonFile)
 {
@@ -283,7 +284,7 @@ void BinaryRecording::resetChannels()
 	m_DataFiles.clear();
 	m_channelIndexes.clear();
 	m_fileIndexes.clear();
-	/* //TODO
+	/*
 	m_dataTimestampFiles.clear();
 	m_eventFiles.clear();
 	m_spikeChannelIndexes.clear();
@@ -310,29 +311,36 @@ void BinaryRecording::writeData(int writeChannel, int realChannel, const float* 
 		m_bufferSize = size;
 	}
 
+	auto t1 = TIC;
 	double multFactor = 1 / (float(0x7fff) * getDataChannel(realChannel)->getBitVolts());
-
 	FloatVectorOperations::copyWithMultiply(m_scaledBuffer.getData(), buffer, multFactor, size);
+	auto t2 = TIC;
+	scaleCount += int((t2 - t1).count());
 
+	t1 = TIC;
 	AudioDataConverters::convertFloatToInt16LE(m_scaledBuffer.getData(), m_intBuffer.getData(), size);
+	t2 = TIC;
+	convertCount += int((t2 - t1).count());
 
+	t1 = TIC;
 	int fileIndex = m_fileIndexes[writeChannel];
 	m_DataFiles[fileIndex]->writeChannel(
 		getTimestamp(writeChannel) - m_startTS[writeChannel],
 		m_channelIndexes[writeChannel],
 		m_intBuffer.getData(), size);
+	t2 = TIC;
+	writeCount += int((t2 - t1).count());
 
+	/*
 	if (m_channelIndexes[writeChannel] == 0)
 	{
 		int64 baseTS = getTimestamp(writeChannel);
 		for (int i = 0; i < size; i++)
 			m_tsBuffer[i] = baseTS + i;
-		/* //TODO:
 		m_dataTimestampFiles[fileIndex]->writeData(m_tsBuffer, size*sizeof(int64));
 		m_dataTimestampFiles[fileIndex]->increaseRecordCount(size);
-		*/
-
 	}
+	*/
 }
 
 void BinaryRecording::writeEvent(int eventIndex, const MidiMessage& event)

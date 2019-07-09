@@ -1,6 +1,8 @@
 #ifndef BINARYRECORDING_H
 #define BINARYRECORDING_H
 
+#include <chrono>
+
 #include "RecordEngine.h"
 #include "SequentialBlockFile.h"
 
@@ -46,6 +48,7 @@ private:
 	Array<int64> m_startTS;
 
 	const int samplesPerBlock{ 4096 };
+
 
 };
 #endif

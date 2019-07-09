@@ -36,7 +36,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class RecordEngine;
 
-
 class RecordThread : public Thread
 {
 public:
@@ -52,6 +51,10 @@ public:
 
 	void setFirstBlockFlag(bool state);
 	void forceCloseFiles();
+
+	int64 getScaleCount();
+	int64 getConvertCount();
+	int64 getWriteCount();
 
 private:
 	void writeData(const AudioSampleBuffer& buffer, int maxSamples, int maxEvents, int maxSpikes, bool lastBlock = false);

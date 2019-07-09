@@ -151,6 +151,12 @@ public:
 	//Method needed by the factory methods in the manager
 	//static RecordEngineManager* getEngineManager();
 
+	/* Profiling variables */
+	int scaleCount;
+	int convertCount;
+	int writeCount;
+
+
 protected:
 	/** Functions to access RecordNode arrays and utilities */
 

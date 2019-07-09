@@ -110,12 +110,9 @@ void RecordThread::run()
 		//EVERY_ENGINE->updateTimestamps(timestamps);
 		m_engine->updateTimestamps(timestamps);
 		//EVERY_ENGINE->openFiles(m_rootFolder, m_experimentNumber, m_recordingNumber);
-		printf("Root: %s, Exp: %d Rec: %d\n", m_rootFolder.getFullPathName(), m_experimentNumber, m_recordingNumber);
 		m_engine->openFiles(m_rootFolder, m_experimentNumber, m_recordingNumber);
 	}
 	//3-Normal loop
-	printf("RecordThread::run()::Finished opening files...\n");
-	printf("RecordThread::run()::Entering normal loop...\n");
 	while (!threadShouldExit())
 	{
 		writeData(dataBuffer, BLOCK_MAX_WRITE_SAMPLES, BLOCK_MAX_WRITE_EVENTS, BLOCK_MAX_WRITE_SPIKES);
@@ -145,25 +142,23 @@ void RecordThread::writeData(const AudioSampleBuffer& dataBuffer, int maxSamples
 	m_engine->startChannelBlock(lastBlock);
 	for (int chan = 0; chan < m_numChannels; ++chan)
 	{
-		/*
 		if (idx[chan].size1 > 0)
 		{
 			//EVERY_ENGINE->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index1), idx[chan].size1);
-			m_engine->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index1), idx[chan].size1);
+			m_engine->writeData(chan, chan, dataBuffer.getReadPointer(chan, idx[chan].index1), idx[chan].size1);
 			if (idx[chan].size2 > 0)
 			{
 				timestamps.set(chan, timestamps[chan] + idx[chan].size1);
 				//EVERY_ENGINE->updateTimestamps(timestamps, chan);
 				m_engine->updateTimestamps(timestamps, chan);
 				//EVERY_ENGINE->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index2), idx[chan].size2);
-				m_engine->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index2), idx[chan].size2);
+				m_engine->writeData(chan, chan, dataBuffer.getReadPointer(chan, idx[chan].index2), idx[chan].size2);
 			}
 		}
-		*/
 	}
 	m_dataQueue->stopRead();
 	//EVERY_ENGINE->endChannelBlock(lastBlock);
-	//m_engine->endChannelBlock(lastBlock);
+	m_engine->endChannelBlock(lastBlock);
 
 	/*
 	std::vector<EventMessagePtr> events;
@@ -191,6 +186,21 @@ void RecordThread::writeData(const AudioSampleBuffer& dataBuffer, int maxSamples
 		EVERY_ENGINE->writeSpike(spikes[sp]->getExtra(), &spikes[sp]->getData());
 	}
 	*/
+}
+
+int64 RecordThread::getScaleCount()
+{
+	return m_engine->scaleCount;
+}
+
+int64 RecordThread::getConvertCount()
+{
+	return m_engine->convertCount;
+}
+
+int64 RecordThread::getWriteCount()
+{
+	return m_engine->writeCount;
 }
 
 void RecordThread::forceCloseFiles()

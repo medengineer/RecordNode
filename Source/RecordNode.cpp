@@ -3,35 +3,27 @@
 using namespace std::chrono;
 
 RecordNode::RecordNode() : GenericProcessor("Record Node"),
-	scaleTime(0), 
-	convertTime(0), 
-	writeTime(0)
+	scaleTime(0),
+	convertTime(0),
+	writeTime(0),
+	setFirstBlock(false),
+	numChannels(0),
+	numSamples(0),
+	experimentNumber(1),
+	recordingNumber(0),
+	isRecording(false)
 {
 	setProcessorType(PROCESSOR_TYPE_FILTER);
 
-	recordThread = new RecordThread();
 	dataQueue = new DataQueue(WRITE_BLOCK_LENGTH, DATA_BUFFER_NBLOCKS);
 
+	recordThread = new RecordThread();
 	recordThread->setQueuePointers(dataQueue);
-
-	setFirstBlock = false;
-
-	numChannels = 0;
-	numSamples = 0;
-
-	processLoopCounter = 0;
-	lastProcessStart = -1; 
-
-	experimentNumber = 1;
-	recordingNumber = 0;
-
-	isRecording = false;
 
 }
 
 RecordNode::~RecordNode()
 {
-
 }
 
 String RecordNode::generateDirectoryName()
@@ -40,7 +32,7 @@ String RecordNode::generateDirectoryName()
 
 	Array<int> t;
 	t.add(calendar.getYear());
-	t.add(calendar.getMonth() + 1); // January = 0
+	t.add(calendar.getMonth() + 1); // January = 0 
 	t.add(calendar.getDayOfMonth());
 	t.add(calendar.getHours());
 	t.add(calendar.getMinutes());
@@ -163,21 +155,23 @@ void RecordNode::startRecording()
 {
 
 	printf("RecordNode::startRecording()\n");
+
+	/* Set write properties */
 	createNewDirectory();
 	recordThread->setFileComponents(rootFolder, recordingNumber, experimentNumber);
-	channelMap.clear();
 	recordThread->setFirstBlockFlag(false);
 	setFirstBlock = false;
 
+	/* Set number of channels */
 	int test_numChannels = 768;
-
 	dataQueue->setChannels(test_numChannels);
-
+	channelMap.clear();
 	for (int ch = 0; ch < test_numChannels; ch++)
 		channelMap.add(ch);
 	recordThread->setChannelMap(channelMap);
-	recordThread->startThread();
 
+	/* Start record thread */
+	recordThread->startThread();
 	isRecording = true;
 
 }
@@ -189,7 +183,7 @@ void RecordNode::stopRecording()
 	if (recordThread->isThreadRunning())
 	{
 		recordThread->signalThreadShouldExit();
-		recordThread->waitForThreadToExit(2000);
+		recordThread->waitForThreadToExit(200); //2000
 	}
 
 }
@@ -218,6 +212,10 @@ void RecordNode::process(AudioSampleBuffer& buffer)
 			recordThread->setFirstBlockFlag(true);
 			setFirstBlock = true;
 		}
+
+		scaleTime = recordThread->getScaleCount();
+		convertTime = recordThread->getConvertCount();
+		writeTime = recordThread->getWriteCount();
 
 	}
 
