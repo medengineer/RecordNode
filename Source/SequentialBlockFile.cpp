@@ -89,12 +89,10 @@ bool SequentialBlockFile::writeChannel(uint64 startPos, int channel, int16* data
 	}
 	if (bIndex < 0)
 	{
-		printf("[RN]BINARY WRITER: Memory block unloaded ahead of time for chan %d start %d ns %d first %d\n",
-			channel, startPos, nSamples, m_memBlocks[0]->getOffset());
-		/*
+		printf("\r[RN]SequentialBlockFile: Memory block unloaded ahead of time for chan %d start %d ns %d first %d", channel, startPos, nSamples, m_memBlocks[0]->getOffset()); fflush(stdout);
 		for (int i = 0; i < m_nChannels; i++)
-			std::cout << "channel " << i << " last block " << m_currentBlock[i] << std::endl;
-		*/
+			printf("\r CH: %d last block %d", i, m_currentBlock[i]); fflush(stdout);
+			//std::cout << "channel " << i << " last block " << m_currentBlock[i] << std::endl;
 		return false;
 	}
 	int writtenSamples = 0;

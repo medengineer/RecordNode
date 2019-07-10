@@ -88,7 +88,6 @@ void RecordThread::setFirstBlockFlag(bool state)
 
 void RecordThread::run()
 {
-	printf("Started RecordThread!\n"); fflush(stdout);
 	const AudioSampleBuffer& dataBuffer = m_dataQueue->getAudioBufferReference();
 	bool closeEarly = true;
 	//1-Wait until the first block has arrived, so we can align the timestamps
@@ -99,7 +98,6 @@ void RecordThread::run()
 	}
 
 	//2-Open Files 
-	printf("RecordThread::run()::Opening Files...\n");
 	if (!threadShouldExit())
 	{
 		m_cleanExit = false;

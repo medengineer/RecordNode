@@ -31,6 +31,8 @@ public:
 	AudioProcessorEditor* createEditor() override;
 	bool hasEditor() const override { return true; }
 
+	void updateSettings() override;
+
 	void prepareToPlay(double sampleRate, int estimatedSamplesPerBlock);
 
 	String generateDirectoryName();

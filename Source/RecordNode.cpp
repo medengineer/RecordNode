@@ -9,8 +9,8 @@ RecordNode::RecordNode() : GenericProcessor("Record Node"),
 	setFirstBlock(false),
 	numChannels(0),
 	numSamples(0),
-	experimentNumber(1),
-	recordingNumber(0),
+	experimentNumber(0),
+	recordingNumber(-1),
 	isRecording(false)
 {
 	setProcessorType(PROCESSOR_TYPE_FILTER);
@@ -151,24 +151,29 @@ void RecordNode::setParameter(int parameterIndex, float newValue)
 
 }
 
+void RecordNode::updateSettings()
+{
+	printf("RecordNode::updateSettings\n");
+}
+
 void RecordNode::startRecording()
 {
+	int numChannels = getNumInputs();
 
-	printf("RecordNode::startRecording()\n");
+	printf("RecordNode::startRecording() numInputs: %d\n", numChannels);
+
+	/* Set number of channels */
+	dataQueue->setChannels(numChannels);
+	channelMap.clear();
+	for (int ch = 0; ch < numChannels; ch++)
+		channelMap.add(ch);
+	recordThread->setChannelMap(channelMap);
 
 	/* Set write properties */
 	createNewDirectory();
 	recordThread->setFileComponents(rootFolder, recordingNumber, experimentNumber);
 	recordThread->setFirstBlockFlag(false);
 	setFirstBlock = false;
-
-	/* Set number of channels */
-	int test_numChannels = 768;
-	dataQueue->setChannels(test_numChannels);
-	channelMap.clear();
-	for (int ch = 0; ch < test_numChannels; ch++)
-		channelMap.add(ch);
-	recordThread->setChannelMap(channelMap);
 
 	/* Start record thread */
 	recordThread->startThread();
