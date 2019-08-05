@@ -54,7 +54,11 @@ public:
 
 private:
 
+	int64 timestamp;
+
 	bool isRecording;
+	bool hasRecorded;
+	bool settingsNeeded;
 
 	File dataDirectory;
 	File rootFolder;
@@ -68,10 +72,12 @@ private:
 	ScopedPointer<RecordThread> recordThread;
 	ScopedPointer<DataQueue> dataQueue;
 
+	Array<bool> validBlocks;
 	std::atomic<bool> setFirstBlock;
 
 	Array<int> channelMap;
 
+	//Profiling data structures
 	float scaleFactor;
 	HeapBlock<float> scaledBuffer;  
 	HeapBlock<int16> intBuffer;

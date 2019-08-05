@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef RECORDTHREAD_H_INCLUDED
 #define RECORDTHREAD_H_INCLUDED
 
-#include "../../../JuceLibraryCode/JuceHeader.h"
 #include "BinaryRecording.h"
 //#include "EventQueue.h"
 #include "DataQueue.h"

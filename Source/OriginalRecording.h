@@ -23,8 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef ORIGINALRECORDING_H_INCLUDED
 #define ORIGINALRECORDING_H_INCLUDED
 
-#include "../../../JuceLibraryCode/JuceHeader.h"
-
 #include "RecordEngine.h"
 #include <stdio.h>
 #include <map>

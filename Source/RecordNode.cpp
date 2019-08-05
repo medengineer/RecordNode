@@ -2,16 +2,21 @@
 
 using namespace std::chrono;
 
-RecordNode::RecordNode() : GenericProcessor("Record Node"),
-	scaleTime(0),
-	convertTime(0),
-	writeTime(0),
+RecordNode::RecordNode() 
+	: GenericProcessor("Record Node"),
+	newDirectoryNeeded(true),
+	timestamp(0),
 	setFirstBlock(false),
 	numChannels(0),
 	numSamples(0),
 	experimentNumber(0),
 	recordingNumber(-1),
-	isRecording(false)
+	isRecording(false),
+	hasRecorded(false),
+	settingsNeeded(false),
+	scaleTime(0),
+	convertTime(0),
+	writeTime(0)
 {
 	setProcessorType(PROCESSOR_TYPE_FILTER);
 
@@ -19,6 +24,11 @@ RecordNode::RecordNode() : GenericProcessor("Record Node"),
 
 	recordThread = new RecordThread();
 	recordThread->setQueuePointers(dataQueue);
+
+	validBlocks.clear();
+	validBlocks.insertMultiple(0, false, getNumInputs());
+
+	std::cout << "Update sanity check..." << std::endl;
 
 }
 
@@ -78,7 +88,6 @@ void RecordNode::createNewDirectory()
 
 	rootFolder = File(dataDirectory.getFullPathName() + File::separator + generateDirectoryName());
 
-	printf("rootFolder: %s\n", rootFolder.getFullPathName());
 	newDirectoryNeeded = false;
 
 }
@@ -139,6 +148,7 @@ void RecordNode::prepareToPlay(double sampleRate, int estimatedSamplesPerBlock)
 	/* This gets called right when the play button is pressed*/
 }
 
+/* Use this function to change paramaters while recording...*/
 void RecordNode::setParameter(int parameterIndex, float newValue)
 {
 	editor->updateParameterButtons(parameterIndex);
@@ -197,19 +207,21 @@ void RecordNode::process(AudioSampleBuffer& buffer)
 {
 
 	if (isRecording)
-
 	{
 
-		if (!numChannels || !numSamples)
+		if (!numChannels)
 		{
 			numChannels = buffer.getNumChannels();
-			numSamples = buffer.getNumSamples();
 		}
 
 		for (int ch = 0; ch < numChannels; ch++)
 		{
-			int64 timestamp = getTimestamp(ch);
-			dataQueue->writeChannel(buffer, ch, numSamples, timestamp);
+			int numSamples = getNumSamples(ch);
+			if (numSamples > 0)
+			{
+				int64 timestamp = getTimestamp(ch);
+				dataQueue->writeChannel(buffer, ch, numSamples, timestamp);
+			}
 		}
 
 		if (!setFirstBlock)

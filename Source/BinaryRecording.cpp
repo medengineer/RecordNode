@@ -135,8 +135,17 @@ void BinaryRecording::openFiles(File rootFolder, int experimentNumber, int recor
 	}
 
 	int nChans = getNumRecordedChannels();
-	
-	//TODO:Timestamps
+	std::cout << "[RN] nChans : " << nChans << std::endl;
+
+	//Timestamps
+	Array<uint32> procIDs;
+	for (int i = 0; i < nChans; i++)
+	{
+		if (i==0)
+			std::cout << "[RN] Start timestamp: " << getTimestamp(0) << std::endl;
+		m_startTS.add(getTimestamp(i));
+	}
+
 	//TODO:Events
 	//TODO:Spikes
 
@@ -304,7 +313,7 @@ void BinaryRecording::writeData(int writeChannel, int realChannel, const float* 
 {
 	if (size > m_bufferSize) //shouldn't happen, but if does, this prevents crash...
 	{
-		std::cerr << "Write buffer overrun, resizing to: " << size << std::endl;
+		std::cerr << "[RN] Write buffer overrun, resizing to: " << size << std::endl;
 		m_scaledBuffer.malloc(size);
 		m_intBuffer.malloc(size);
 		m_tsBuffer.malloc(size);
