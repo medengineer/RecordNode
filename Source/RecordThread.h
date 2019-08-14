@@ -25,26 +25,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RECORDTHREAD_H_INCLUDED
 
 #include "BinaryRecording.h"
-//#include "EventQueue.h"
+#include "EventQueue.h"
 #include "DataQueue.h"
+#include "Utils.h"
 #include <atomic>
 
 #define BLOCK_MAX_WRITE_SAMPLES 4096
 #define BLOCK_MAX_WRITE_EVENTS 32
 #define BLOCK_MAX_WRITE_SPIKES 32
 
-class RecordEngine;
+class RecordNode;
 
 class RecordThread : public Thread
 {
 public:
-	RecordThread();
+	RecordThread(RecordNode* parentNode);
 	//RecordThread(const OwnedArray<RecordEngine>& engines);
 	~RecordThread();
 	void setFileComponents(File rootFolder, int experimentNumber, int recordingNumber);
 	void setChannelMap(const Array<int>& channels);
-	//void setQueuePointers(DataQueue* data, EventMsgQueue* events, SpikeMsgQueue* spikes);
-	void setQueuePointers(DataQueue* data);
+	void setQueuePointers(DataQueue* data, EventMsgQueue* events, SpikeMsgQueue* spikes);
 
 	void run() override;
 
@@ -58,13 +58,14 @@ public:
 private:
 	void writeData(const AudioSampleBuffer& buffer, int maxSamples, int maxEvents, int maxSpikes, bool lastBlock = false);
 
+	RecordNode* recordNode;
 	//const OwnedArray<RecordEngine>& m_engineArray;
 	ScopedPointer<RecordEngine> m_engine;
 	Array<int> m_channelArray;
 
 	DataQueue* m_dataQueue;
-	//EventMsgQueue* m_eventQueue;
-	//SpikeMsgQueue *m_spikeQueue;
+	EventMsgQueue* m_eventQueue;
+	SpikeMsgQueue *m_spikeQueue;
 
 	std::atomic<bool> m_receivedFirstBlock;
 	std::atomic<bool> m_cleanExit;

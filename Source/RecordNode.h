@@ -7,8 +7,9 @@
 
 #include <ProcessorHeaders.h>
 #include "RecordNodeEditor.h"
-#include "DataQueue.h"
 #include "RecordThread.h"
+#include "DataQueue.h"
+#include "Utils.h"
 
 #define WRITE_BLOCK_LENGTH		1024
 #define DATA_BUFFER_NBLOCKS		300
@@ -19,6 +20,8 @@
 #define NPX_BIT_VOLTS			0.195f
 #define MAX_BUFFER_SIZE			40960
 #define CHANNELS_PER_THREAD		384
+
+#define DEBUG 1
 
 class RecordNode : public GenericProcessor
 {
@@ -71,6 +74,8 @@ private:
 
 	ScopedPointer<RecordThread> recordThread;
 	ScopedPointer<DataQueue> dataQueue;
+	ScopedPointer<EventMsgQueue> eventQueue;
+	ScopedPointer<SpikeMsgQueue> spikeQueue;
 
 	Array<bool> validBlocks;
 	std::atomic<bool> setFirstBlock;
@@ -81,6 +86,11 @@ private:
 	float scaleFactor;
 	HeapBlock<float> scaledBuffer;  
 	HeapBlock<int16> intBuffer;
+
+	/** Cycle through the event buffer, looking for data to save */
+	void handleEvent(const EventChannel* eventInfo, const MidiMessage& event, int samplePosition) override;
+
+	virtual void handleTimestampSyncTexts(const MidiMessage& event);
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RecordNode);
 

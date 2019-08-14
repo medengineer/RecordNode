@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define RECORDENGINE_H_INCLUDED
 
 #include <ProcessorHeaders.h>
+#include "Utils.h"
 
 #include <map>
 

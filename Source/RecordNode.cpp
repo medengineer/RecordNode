@@ -10,7 +10,7 @@ RecordNode::RecordNode()
 	numChannels(0),
 	numSamples(0),
 	experimentNumber(0),
-	recordingNumber(-1),
+	recordingNumber(2),
 	isRecording(false),
 	hasRecorded(false),
 	settingsNeeded(false),
@@ -21,14 +21,14 @@ RecordNode::RecordNode()
 	setProcessorType(PROCESSOR_TYPE_FILTER);
 
 	dataQueue = new DataQueue(WRITE_BLOCK_LENGTH, DATA_BUFFER_NBLOCKS);
+	eventQueue = new EventMsgQueue(EVENT_BUFFER_NEVENTS);
+	spikeQueue = new SpikeMsgQueue(SPIKE_BUFFER_NSPIKES);
 
-	recordThread = new RecordThread();
-	recordThread->setQueuePointers(dataQueue);
+	recordThread = new RecordThread(this);
+	recordThread->setQueuePointers(dataQueue, eventQueue, spikeQueue);
 
 	validBlocks.clear();
 	validBlocks.insertMultiple(0, false, getNumInputs());
-
-	std::cout << "Update sanity check..." << std::endl;
 
 }
 
@@ -82,7 +82,7 @@ String RecordNode::generateDirectoryName()
 
 void RecordNode::createNewDirectory()
 {
-	std::cout << "Creating new directory." << std::endl;
+	LOGD(__FUNCTION__, " Creating new directory.");
 
 	dataDirectory = File::getCurrentWorkingDirectory();
 
@@ -129,11 +129,13 @@ String RecordNode::generateDateString() const
 
 int RecordNode::getExperimentNumber() const
 {
+	LOGD(__FUNCTION__, " = ", experimentNumber);
 	return experimentNumber;
 }
 
 int RecordNode::getRecordingNumber() const
 {
+	LOGD(__FUNCTION__, " = ", recordingNumber);
 	return recordingNumber;
 }
 
@@ -163,14 +165,14 @@ void RecordNode::setParameter(int parameterIndex, float newValue)
 
 void RecordNode::updateSettings()
 {
-	printf("RecordNode::updateSettings\n");
+	LOGD(__FUNCTION__);
 }
 
 void RecordNode::startRecording()
 {
 	int numChannels = getNumInputs();
 
-	printf("RecordNode::startRecording() numInputs: %d\n", numChannels);
+	LOGD(__FUNCTION__, " numChannels: ", numChannels, " experimentNumber: ", experimentNumber);
 
 	/* Set number of channels */
 	dataQueue->setChannels(numChannels);
@@ -194,7 +196,8 @@ void RecordNode::startRecording()
 void RecordNode::stopRecording()
 {
 
-	printf("RecordNode::stopRecording()\n");
+	LOGD(__FUNCTION__);
+	isRecording = false;
 	if (recordThread->isThreadRunning())
 	{
 		recordThread->signalThreadShouldExit();
@@ -202,19 +205,42 @@ void RecordNode::stopRecording()
 	}
 
 }
+
+void RecordNode::handleEvent(const EventChannel* eventInfo, const MidiMessage& event, int samplePosition)
+{
+
+	LOGD(__FUNCTION__);
+    if (true)
+    {
+
+            if ((*(event.getRawData()+0) & 0x80) == 0) // saving flag > 0 (i.e., event has not already been processed)
+            {
+				int64 timestamp = Event::getTimestamp(event);
+				int eventIndex;
+				if (eventInfo)
+					eventIndex = getEventChannelIndex(Event::getSourceIndex(event), Event::getSourceID(event), Event::getSubProcessorIdx(event));
+				else
+					eventIndex = -1;
+				if (isRecording)
+					eventQueue->addEvent(event, timestamp, eventIndex);
+            }
+    }
+}
+
+void RecordNode::handleTimestampSyncTexts(const MidiMessage& event)
+{
+	handleEvent(nullptr, event, 0);
+}
 	
 void RecordNode::process(AudioSampleBuffer& buffer)
 {
 
+	checkForEvents();
+
 	if (isRecording)
 	{
 
-		if (!numChannels)
-		{
-			numChannels = buffer.getNumChannels();
-		}
-
-		for (int ch = 0; ch < numChannels; ch++)
+		for (int ch = 0; ch < buffer.getNumChannels(); ch++)
 		{
 			int numSamples = getNumSamples(ch);
 			if (numSamples > 0)
