@@ -21,11 +21,8 @@ public:
 	void closeFiles() override;
 	void resetChannels() override;
 	void writeData(int writeChannel, int realChannel, const float* buffer, int size) override;
-	//TODO:
 	void writeEvent(int eventIndex, const MidiMessage& event) override;
-	//TODO:
 	void addSpikeElectrode(int index, const SpikeChannel* elec) override;
-	//TODO:
 	void writeSpike(int electrodeIndex, const SpikeEvent* spike) override;
 	void writeTimestampSyncText(uint16 sourceID, uint16 sourceIdx, int64 timestamp, float, String text) override;
 	void setParameter(EngineParameter& parameter) override;
