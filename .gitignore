@@ -8,4 +8,6 @@
 # 2. Windows related
 Builds/VS2013
 
+# 3. IDE related
+.vscode/
 
