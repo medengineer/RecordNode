@@ -37,6 +37,7 @@ public:
 	void updateSettings() override;
 
 	void prepareToPlay(double sampleRate, int estimatedSamplesPerBlock);
+	void startRecording() override;
 
 	String generateDirectoryName();
 	void createNewDirectory();
@@ -46,7 +47,6 @@ public:
 
 	void process(AudioSampleBuffer& buffer) override;
 
-	void startRecording() override;
 	void stopRecording() override;
 
 	void setParameter(int parameterIndex, float newValue) override;
@@ -56,8 +56,6 @@ public:
 	int64 writeTime;
 
 private:
-
-	int64 timestamp;
 
 	bool isRecording;
 	bool hasRecorded;
@@ -69,8 +67,12 @@ private:
 	int experimentNumber;
 	int recordingNumber;
 
+	int64 timestamp;
+
 	int numChannels;
 	int numSamples;
+
+	ScopedPointer<RecordEngine> recordEngine;
 
 	ScopedPointer<RecordThread> recordThread;
 	ScopedPointer<DataQueue> dataQueue;

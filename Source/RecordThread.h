@@ -39,7 +39,7 @@ class RecordNode;
 class RecordThread : public Thread
 {
 public:
-	RecordThread(RecordNode* parentNode);
+	RecordThread(RecordNode* parentNode, const ScopedPointer<RecordEngine>& engine);
 	//RecordThread(const OwnedArray<RecordEngine>& engines);
 	~RecordThread();
 	void setFileComponents(File rootFolder, int experimentNumber, int recordingNumber);
@@ -60,7 +60,7 @@ private:
 
 	RecordNode* recordNode;
 	//const OwnedArray<RecordEngine>& m_engineArray;
-	ScopedPointer<RecordEngine> m_engine;
+	const ScopedPointer<RecordEngine>& m_engine;
 	Array<int> m_channelArray;
 
 	DataQueue* m_dataQueue;

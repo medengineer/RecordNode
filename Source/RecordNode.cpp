@@ -24,11 +24,11 @@ RecordNode::RecordNode()
 	eventQueue = new EventMsgQueue(EVENT_BUFFER_NEVENTS);
 	spikeQueue = new SpikeMsgQueue(SPIKE_BUFFER_NSPIKES);
 
-	recordThread = new RecordThread(this);
-	recordThread->setQueuePointers(dataQueue, eventQueue, spikeQueue);
+	recordEngine = new BinaryRecording();
+	recordEngine->resetChannels();
 
-	validBlocks.clear();
-	validBlocks.insertMultiple(0, false, getNumInputs());
+	recordThread = new RecordThread(this, recordEngine);
+	recordThread->setQueuePointers(dataQueue, eventQueue, spikeQueue);
 
 }
 
@@ -170,21 +170,86 @@ void RecordNode::updateSettings()
 
 void RecordNode::startRecording()
 {
-	int numChannels = getNumInputs();
+	/* Got signal from plugin-GUI to start recording */
+	if (newDirectoryNeeded)
+	{
+		createNewDirectory();
+		recordingNumber = 0;
+		experimentNumber = 1;
+		settingsNeeded = true;
+		recordEngine->directoryChanged();
+	}
+	else
+	{
+		recordingNumber++; // increment recording number within this directory
+	}
 
-	LOGD(__FUNCTION__, " numChannels: ", numChannels, " experimentNumber: ", experimentNumber);
+	if (!rootFolder.exists())
+	{
+		rootFolder.createDirectory();
+	}
+	/* TODO: Do we still need this? 
+	if (settingsNeeded)
+	{
+		String settingsFileName = rootFolder.getFullPathName() + File::separator + "settings" + ((experimentNumber > 1) ? "_" + String(experimentNumber) : String::empty) + ".xml";
+		AccessClass::getEditorViewport()->saveState(File(settingsFileName), m_lastSettingsText);
+		settingsNeeded = false;
+	}
+	*/
 
-	/* Set number of channels */
-	dataQueue->setChannels(numChannels);
+	recordThread->setFileComponents(rootFolder, recordingNumber, experimentNumber);
+
 	channelMap.clear();
-	for (int ch = 0; ch < numChannels; ch++)
-		channelMap.add(ch);
+	int totChans = dataChannelArray.size();
+	LOGD(__FUNCTION__, " totChans: ", totChans);
+	OwnedArray<RecordProcessorInfo> procInfo;
+	Array<int> chanProcessorMap;
+	Array<int> chanOrderinProc;
+	int lastProcessor = -1;
+	int procIndex = -1;
+	int chanProcOrder = 0;
+	for (int ch = 0; ch < totChans; ++ch)
+	{
+		DataChannel* chan = dataChannelArray[ch];
+		if (chan->getRecordState())
+		{
+			channelMap.add(ch);
+			//This is bassed on the assumption that all channels from the same processor are added contiguously
+			//If this behaviour changes, this check should be most thorough
+			if (chan->getCurrentNodeID() != lastProcessor)
+			{
+				lastProcessor = chan->getCurrentNodeID();
+				RecordProcessorInfo* pi = new RecordProcessorInfo();
+				pi->processorId = chan->getCurrentNodeID();
+				procInfo.add(pi);
+				procIndex++;
+				chanProcOrder = 0;
+			}
+			procInfo.getLast()->recordedChannels.add(channelMap.size() - 1);
+			chanProcessorMap.add(procIndex);
+			chanOrderinProc.add(chanProcOrder);
+			chanProcOrder++;
+		}
+	}
+	std::cout << "Num Recording Processors: " << procInfo.size() << std::endl;
+	int numRecordedChannels = channelMap.size();
+	
+	validBlocks.clear();
+	validBlocks.insertMultiple(0, false, getNumInputs());
+
+	//WARNING: If at some point we record at more that one recordEngine at once, we should change this, as using OwnedArrays only works for the first
+	recordEngine->setChannelMapping(channelMap, chanProcessorMap, chanOrderinProc, procInfo);
 	recordThread->setChannelMap(channelMap);
 
-	/* Set write properties */
-	createNewDirectory();
-	recordThread->setFileComponents(rootFolder, recordingNumber, experimentNumber);
+	dataQueue->setChannels(numRecordedChannels);
+	eventQueue->reset();
+	spikeQueue->reset();
 	recordThread->setFirstBlockFlag(false);
+
+	isRecording = true;
+	hasRecorded = true;
+
+	/* Set write properties */
 	setFirstBlock = false;
 
 	/* Start record thread */

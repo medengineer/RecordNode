@@ -133,14 +133,10 @@ public:
 	/** Called at the start of every write block */
 	void updateTimestamps(const Array<int64>& timestamps, int channel = -1);
 
-	/** Called prior to opening files, to set the map between recorded
-	channels and actual channel numbers
+	/** Called prior to opening files, to set the map between recorded channels and actual channel numbers */
 	void setChannelMapping(const Array<int>& channels, const Array<int>& chanProcessor, const Array<int>& chanOrder, OwnedArray<RecordProcessorInfo>& processors);
-	*/
-	void setChannelMapping(const Array<int>& channels);
 
-	/** Called after all channels and spike groups have been registered,
-	just before acquisition starts */
+	/** Called after all channels and spike groups have been registered, just before acquisition starts */
 	virtual void startAcquisition();
 
 	/** Called when the recording directory changes during an acquisition */

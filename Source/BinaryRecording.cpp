@@ -44,6 +44,7 @@ void BinaryRecording::openFiles(File rootFolder, int experimentNumber, int recor
     String contPath = basepath + "continuous" + File::separatorString;
     //Open channel files
     int nProcessors = getNumRecordedProcessors();
+	LOGD(__FUNCTION__, " nProcessors: ", nProcessors);
 
     m_channelIndexes.insertMultiple(0, 0, getNumRecordedChannels());
     m_fileIndexes.insertMultiple(0, 0, getNumRecordedChannels());
@@ -54,80 +55,82 @@ void BinaryRecording::openFiles(File rootFolder, int experimentNumber, int recor
     Array<var> jsonChannels;
     StringArray continuousFileNames;
     int lastId = 0;
-
-    int recChans = getNumRecordedChannels();
-
-    for (int chan = 0; chan < recChans; chan++)
+    for (int proc = 0; proc < nProcessors; proc++)
     {
+        const RecordProcessorInfo& pInfo = getProcessorInfo(proc);
+        int recChans = pInfo.recordedChannels.size();
 
-        const DataChannel* channelInfo = getDataChannel(chan);
-        int sourceId = channelInfo->getSourceNodeID();
-        int sourceSubIdx = channelInfo->getSubProcessorIdx();
-        int nInfoArrays = indexedDataChannels.size();
-        bool found = false;
-        DynamicObject::Ptr jsonChan = new DynamicObject();
-        jsonChan->setProperty("channel_name", channelInfo->getName());
-        jsonChan->setProperty("description", channelInfo->getDescription());
-        jsonChan->setProperty("identifier", channelInfo->getIdentifier());
-        jsonChan->setProperty("history", channelInfo->getHistoricString());
-        jsonChan->setProperty("bit_volts", channelInfo->getBitVolts());
-        jsonChan->setProperty("units", channelInfo->getDataUnits());
-        jsonChan->setProperty("source_processor_index", channelInfo->getSourceIndex());
-        jsonChan->setProperty("recorded_processor_index", channelInfo->getCurrentNodeChannelIdx());
-        createChannelMetaData(channelInfo, jsonChan);
-        for (int i = lastId; i < nInfoArrays; i++)
+        for (int chan = 0; chan < recChans; chan++)
         {
-            if (sourceId == indexedDataChannels[i]->getSourceNodeID() && sourceSubIdx == indexedDataChannels[i]->getSubProcessorIdx())
+            int recordedChan = pInfo.recordedChannels[chan];
+            int realChan = getRealChannel(recordedChan);
+            const DataChannel* channelInfo = getDataChannel(realChan);
+            int sourceId = channelInfo->getSourceNodeID();
+            int sourceSubIdx = channelInfo->getSubProcessorIdx();
+            int nInfoArrays = indexedDataChannels.size();
+            bool found = false;
+            DynamicObject::Ptr jsonChan = new DynamicObject();
+            jsonChan->setProperty("channel_name", channelInfo->getName());
+            jsonChan->setProperty("description", channelInfo->getDescription());
+            jsonChan->setProperty("identifier", channelInfo->getIdentifier());
+            jsonChan->setProperty("history", channelInfo->getHistoricString());
+            jsonChan->setProperty("bit_volts", channelInfo->getBitVolts());
+            jsonChan->setProperty("units", channelInfo->getDataUnits());
+            jsonChan->setProperty("source_processor_index", channelInfo->getSourceIndex());
+            jsonChan->setProperty("recorded_processor_index", channelInfo->getCurrentNodeChannelIdx());
+            createChannelMetaData(channelInfo, jsonChan);
+            for (int i = lastId; i < nInfoArrays; i++)
             {
-                unsigned int count = indexedChannelCount[i];
-                m_channelIndexes.set(chan, count);
-                m_fileIndexes.set(chan, i);
-                indexedChannelCount.set(i, count + 1);
-                jsonChannels.getReference(i).append(var(jsonChan));
-                found = true;
-                break;
+                if (sourceId == indexedDataChannels[i]->getSourceNodeID() && sourceSubIdx == indexedDataChannels[i]->getSubProcessorIdx())
+                {
+                    unsigned int count = indexedChannelCount[i];
+                    m_channelIndexes.set(recordedChan, count);
+                    m_fileIndexes.set(recordedChan, i);
+                    indexedChannelCount.set(i, count + 1);
+                    jsonChannels.getReference(i).append(var(jsonChan));
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                String datPath = getProcessorString(channelInfo);
+                continuousFileNames.add(contPath + datPath + "continuous.dat");
+
+                ScopedPointer<NpyFile> tFile = new NpyFile(contPath + datPath + "timestamps.npy", NpyType(BaseType::INT64,1));
+                m_dataTimestampFiles.add(tFile.release());
+
+                m_fileIndexes.set(recordedChan, nInfoArrays);
+                m_channelIndexes.set(recordedChan, 0);
+                indexedChannelCount.add(1);
+                indexedDataChannels.add(channelInfo);
+
+                Array<var> jsonChanArray;
+                jsonChanArray.add(var(jsonChan));
+                jsonChannels.add(var(jsonChanArray));
+                DynamicObject::Ptr jsonFile = new DynamicObject();
+                jsonFile->setProperty("folder_name", datPath.replace(File::separatorString, "/")); //to make it more system agnostic, replace separator with only one slash
+                jsonFile->setProperty("sample_rate", channelInfo->getSampleRate());
+                jsonFile->setProperty("source_processor_name", channelInfo->getSourceName());
+                jsonFile->setProperty("source_processor_id", channelInfo->getSourceNodeID());
+                jsonFile->setProperty("source_processor_sub_idx", channelInfo->getSubProcessorIdx());
+                jsonFile->setProperty("recorded_processor", channelInfo->getCurrentNodeName());
+                jsonFile->setProperty("recorded_processor_id", channelInfo->getCurrentNodeID());
+                jsonContinuousfiles.add(var(jsonFile));
             }
         }
-        if (!found)
-        {
-            String datPath = getProcessorString(channelInfo);
-            continuousFileNames.add(contPath + datPath + "continuous.dat");
-
-            ScopedPointer<NpyFile> tFile = new NpyFile(contPath + datPath + "timestamps.npy", NpyType(BaseType::INT64,1));
-            m_dataTimestampFiles.add(tFile.release());
-
-            m_fileIndexes.set(chan, nInfoArrays);
-            m_channelIndexes.set(chan, 0);
-            indexedChannelCount.add(1);
-            indexedDataChannels.add(channelInfo);
-
-            Array<var> jsonChanArray;
-            jsonChanArray.add(var(jsonChan));
-            jsonChannels.add(var(jsonChanArray));
-            DynamicObject::Ptr jsonFile = new DynamicObject();
-            jsonFile->setProperty("folder_name", datPath.replace(File::separatorString, "/")); //to make it more system agnostic, replace separator with only one slash
-            jsonFile->setProperty("sample_rate", channelInfo->getSampleRate());
-            jsonFile->setProperty("source_processor_name", channelInfo->getSourceName());
-            jsonFile->setProperty("source_processor_id", channelInfo->getSourceNodeID());
-            jsonFile->setProperty("source_processor_sub_idx", channelInfo->getSubProcessorIdx());
-            jsonFile->setProperty("recorded_processor", channelInfo->getCurrentNodeName());
-            jsonFile->setProperty("recorded_processor_id", channelInfo->getCurrentNodeID());
-            jsonContinuousfiles.add(var(jsonFile));
-        }
+        lastId = indexedDataChannels.size();
     }
-    lastId = indexedDataChannels.size();
-
     int nFiles = continuousFileNames.size();
     for (int i = 0; i < nFiles; i++)
     {
         int numChannels = jsonChannels.getReference(i).size();
-        printf("numChannels: %d samplesPerBlock: %d\n", numChannels, samplesPerBlock);
         ScopedPointer<SequentialBlockFile> bFile = new SequentialBlockFile(numChannels, samplesPerBlock);
         if (bFile->openFile(continuousFileNames[i]))
             m_DataFiles.add(bFile.release());
         else
             m_DataFiles.add(nullptr);
-        DynamicObject::Ptr jsonFile = jsonContinuousfiles.getReference(i).getDynamicObject();
+        DynamicObject::Ptr jsonFile = jsonContinuousfiles.getReference(i).getDynamicObject(); 
         jsonFile->setProperty("num_channels", numChannels);
         jsonFile->setProperty("channels", jsonChannels.getReference(i));
     }
@@ -291,7 +294,6 @@ void BinaryRecording::openFiles(File rootFolder, int experimentNumber, int recor
         jsonFile->setProperty("num_channels", size);
         jsonFile->setProperty("channels", jsonSpikeChannels.getReference(i));
     }
-
 
     File syncFile = File(basepath + "sync_messages.txt");
     Result res = syncFile.create();

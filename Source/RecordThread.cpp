@@ -29,15 +29,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //#define EVERY_ENGINE for(int eng = 0; eng < m_engineArray.size(); eng++) m_engineArray[eng]
 #define EVERY_ENGINE m_engine;
 
-RecordThread::RecordThread(RecordNode* parentNode) :
+RecordThread::RecordThread(RecordNode* parentNode, const ScopedPointer<RecordEngine>& engine) :
 Thread("Record Thread"),
-//m_engineArray(engines),
+m_engine(engine),
 recordNode(parentNode),
 m_receivedFirstBlock(false),
 m_cleanExit(true)
 {
-	m_engine = new BinaryRecording();
-	m_engine->resetChannels();
 }
 
 RecordThread::~RecordThread()
@@ -64,8 +62,7 @@ void RecordThread::setChannelMap(const Array<int>& channels)
 		return;
 	m_channelArray = channels;
 	m_numChannels = channels.size();
-	m_engine->setChannelMapping(channels);
-	m_engine->directoryChanged();
+	
 }
 
 void RecordThread::setQueuePointers(DataQueue* data, EventMsgQueue* events, SpikeMsgQueue* spikes)
