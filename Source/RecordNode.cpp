@@ -312,8 +312,12 @@ void RecordNode::process(AudioSampleBuffer& buffer)
 			{
 				int64 timestamp = getTimestamp(ch);
 				dataQueue->writeChannel(buffer, ch, numSamples, timestamp);
+				if (ch % CHANNEL_HOP == 0)
+					LOGD(__FUNCTION__, " channel: ", ch);
 			}
 		}
+
+		fflush(stdout);
 
 		if (!setFirstBlock)
 		{
