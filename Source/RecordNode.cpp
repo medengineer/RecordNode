@@ -305,24 +305,36 @@ void RecordNode::process(AudioSampleBuffer& buffer)
 	if (isRecording)
 	{
 
-		for (int ch = 0; ch < buffer.getNumChannels(); ch++)
+		for (int ch = 0; ch < channelMap.size(); ch++)
 		{
-			int numSamples = getNumSamples(ch);
-			if (numSamples > 0)
+			int nSamples = getNumSamples(ch);
+			bool shouldWrite = validBlocks[ch];
+			if (!shouldWrite && nSamples > 0)
 			{
-				int64 timestamp = getTimestamp(ch);
-				dataQueue->writeChannel(buffer, ch, numSamples, timestamp);
-				if (ch % CHANNEL_HOP == 0)
-					LOGD(__FUNCTION__, " channel: ", ch);
+				shouldWrite = true;
+				validBlocks.set(ch, true);
 			}
+			
+			if (shouldWrite)
+				dataQueue->writeChannel(buffer, ch, nSamples, getTimestamp(ch));
 		}
-
-		fflush(stdout);
 
 		if (!setFirstBlock)
 		{
-			recordThread->setFirstBlockFlag(true);
-			setFirstBlock = true;
+			bool shouldSetFlag = true;
+			for (int chan = 0; chan < channelMap.size(); ++chan)
+			{
+				if (!validBlocks[chan])
+				{
+					shouldSetFlag = false;
+					break;
+				}
+			}
+			if (shouldSetFlag)
+			{
+				recordThread->setFirstBlockFlag(true);
+				setFirstBlock = true;
+			}
 		}
 
 		scaleTime = recordThread->getScaleCount();
