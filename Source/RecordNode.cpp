@@ -274,22 +274,18 @@ void RecordNode::stopRecording()
 void RecordNode::handleEvent(const EventChannel* eventInfo, const MidiMessage& event, int samplePosition)
 {
 
-	LOGD(__FUNCTION__);
-    if (true)
-    {
+	if (true) //TODO: True only when saving events is enabled for this RecordNode.
+	{
+		int64 timestamp = Event::getTimestamp(event);
+		int eventIndex;
+		if (eventInfo)
+			eventIndex = getEventChannelIndex(Event::getSourceIndex(event), Event::getSourceID(event), Event::getSubProcessorIdx(event));
+		else
+			eventIndex = -1;
+		if (isRecording)
+			eventQueue->addEvent(event, timestamp, eventIndex);
+	}
 
-            if ((*(event.getRawData()+0) & 0x80) == 0) // saving flag > 0 (i.e., event has not already been processed)
-            {
-				int64 timestamp = Event::getTimestamp(event);
-				int eventIndex;
-				if (eventInfo)
-					eventIndex = getEventChannelIndex(Event::getSourceIndex(event), Event::getSourceID(event), Event::getSubProcessorIdx(event));
-				else
-					eventIndex = -1;
-				if (isRecording)
-					eventQueue->addEvent(event, timestamp, eventIndex);
-            }
-    }
 }
 
 void RecordNode::handleTimestampSyncTexts(const MidiMessage& event)

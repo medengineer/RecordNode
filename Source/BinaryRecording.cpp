@@ -482,7 +482,6 @@ void BinaryRecording::resetChannels()
 
 void BinaryRecording::writeEventMetaData(const MetaDataEvent* event, NpyFile* file)
 {
-    LOGD(__FUNCTION__);
     if (!file || !event) return;
     int nMetaData = event->getMetadataValueCount();
     for (int i = 0; i < nMetaData; i++)
@@ -494,7 +493,6 @@ void BinaryRecording::writeEventMetaData(const MetaDataEvent* event, NpyFile* fi
 
 void BinaryRecording::increaseEventCounts(EventRecording* rec)
 {
-    LOGD(__FUNCTION__);
     rec->mainFile->increaseRecordCount();
     rec->timestampFile->increaseRecordCount();
     if (rec->extraFile) rec->extraFile->increaseRecordCount();
