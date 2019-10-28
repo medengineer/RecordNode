@@ -11,6 +11,8 @@
 #include "DataQueue.h"
 #include "Utils.h"
 
+#include "taskflow/taskflow.hpp"
+
 #define WRITE_BLOCK_LENGTH		1024
 #define DATA_BUFFER_NBLOCKS		300
 #define EVENT_BUFFER_NEVENTS	512
