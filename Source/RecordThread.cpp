@@ -140,14 +140,10 @@ void RecordThread::writeData(const AudioSampleBuffer& dataBuffer, int maxSamples
 	{
 		if (idx[chan].size1 > 0)
 		{
-			if (chan % CHANNEL_HOP == 0)
-				LOGD(__FUNCTION__, " channel: ", chan);
 			//EVERY_ENGINE->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index1), idx[chan].size1);
 			m_engine->writeData(chan, chan, dataBuffer.getReadPointer(chan, idx[chan].index1), idx[chan].size1);
 			if (idx[chan].size2 > 0)
 			{
-				if (chan % CHANNEL_HOP == 0)
-					LOGD(__FUNCTION__, " (overflow) channel: ", chan);
 				timestamps.set(chan, timestamps[chan] + idx[chan].size1);
 				//EVERY_ENGINE->updateTimestamps(timestamps, chan);
 				m_engine->updateTimestamps(timestamps, chan);

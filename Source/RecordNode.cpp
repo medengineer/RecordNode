@@ -176,6 +176,7 @@ void RecordNode::updateSettings()
 	for (int ch = 0; ch < dataChannelArray.size(); ch++)
 	{
 		DataChannel* chan = dataChannelArray[ch];
+		chan->setRecordState(true);
 		if (chan->getSubProcessorIdx() > subProcIdx)
 		{
 			subProcIdx = chan->getSubProcessorIdx();
@@ -189,17 +190,6 @@ void RecordNode::updateSettings()
 		}
 	}
 	parChannelMap.push_back(subProcChannels);
-
-	int count = 0;
-	for (std::vector<std::vector<int>>::iterator it = parChannelMap.begin() ; it != parChannelMap.end(); ++it)
-    {
-		LOGD("SubProcessor: ", count); count++;
-		for (std::vector<int>::iterator itt = (*it).begin() ; itt != (*it).end(); ++itt)
-		{
-			std::cout << *itt;
-		}
-		std::cout << std::endl;
-	}
 
 }
 
