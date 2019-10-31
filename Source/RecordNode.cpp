@@ -166,6 +166,41 @@ void RecordNode::setParameter(int parameterIndex, float newValue)
 void RecordNode::updateSettings()
 {
 	LOGD(__FUNCTION__);
+	LOGD("Number of channels: ", dataChannelArray.size());
+
+	parChannelMap.clear();
+	int subProcIdx = -1;
+	std::vector<int> subProcChannels;
+
+	/* Build processor channel map here for now, need to move into startRecording to enable channel selection */
+	for (int ch = 0; ch < dataChannelArray.size(); ch++)
+	{
+		DataChannel* chan = dataChannelArray[ch];
+		if (chan->getSubProcessorIdx() > subProcIdx)
+		{
+			subProcIdx = chan->getSubProcessorIdx();
+			if (subProcChannels.size())
+				parChannelMap.push_back(subProcChannels);
+			subProcChannels = {ch};
+		}
+		else
+		{
+			subProcChannels.push_back(ch);
+		}
+	}
+	parChannelMap.push_back(subProcChannels);
+
+	int count = 0;
+	for (std::vector<std::vector<int>>::iterator it = parChannelMap.begin() ; it != parChannelMap.end(); ++it)
+    {
+		LOGD("SubProcessor: ", count); count++;
+		for (std::vector<int>::iterator itt = (*it).begin() ; itt != (*it).end(); ++itt)
+		{
+			std::cout << *itt;
+		}
+		std::cout << std::endl;
+	}
+
 }
 
 void RecordNode::startRecording()

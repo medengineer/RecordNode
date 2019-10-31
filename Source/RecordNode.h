@@ -81,6 +81,8 @@ private:
 	ScopedPointer<EventMsgQueue> eventQueue;
 	ScopedPointer<SpikeMsgQueue> spikeQueue;
 
+	std::vector<std::vector<int>> parChannelMap;
+
 	Array<bool> validBlocks;
 	std::atomic<bool> setFirstBlock;
 
