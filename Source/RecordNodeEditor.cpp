@@ -31,7 +31,7 @@ RecordNodeEditor::RecordNodeEditor(RecordNode* parentNode, bool useDefaultParame
 {
 
 	recordNode = parentNode;
-
+/*
 	desiredWidth = 120;
 
 	scaleStringLabel = new Label("scaleLabel", "Copy time:");
@@ -74,6 +74,8 @@ RecordNodeEditor::RecordNodeEditor(RecordNode* parentNode, bool useDefaultParame
 	addAndMakeVisible(writeTimeLabel);
 
 	startTimer(500);
+
+*/
 
 }
 

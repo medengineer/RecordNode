@@ -109,37 +109,37 @@ void DataQueue::fillTimestamps(int channel, int index, int size, int64 timestamp
 	}
 }
 
-void DataQueue::writeChannel(const AudioSampleBuffer& buffer, int channel, int nSamples, int64 timestamp)
+void DataQueue::writeChannel(const AudioSampleBuffer& buffer, int srcChannel, int destChannel, int nSamples, int64 timestamp)
 {
 	int index1, size1, index2, size2;
-	m_fifos[channel]->prepareToWrite(nSamples, index1, size1, index2, size2);
+	m_fifos[destChannel]->prepareToWrite(nSamples, index1, size1, index2, size2);
 
 	if ((size1 + size2) < nSamples)
 	{ //TODO: turn this into a proper notification. Probably returning a bool.
 		//std::cerr << "Recording Data Queue Overflow" << std::endl;
 		LOGD(__FUNCTION__, " Recording Data Queue Overflow: sz1: ", size1, " sz2: ", size2, " nSamples: ", nSamples);
 	}
-	m_buffer.copyFrom(channel,
+	m_buffer.copyFrom(destChannel,
 		index1,
 		buffer,
-		channel,
+		srcChannel,
 		0,
 		size1);
 
-	fillTimestamps(channel, index1, size1, timestamp);
+	fillTimestamps(destChannel, index1, size1, timestamp);
 
 	if (size2 > 0)
 	{
-		m_buffer.copyFrom(channel,
+		m_buffer.copyFrom(destChannel,
 			index2,
 			buffer,
-			channel,
+			srcChannel,
 			size1,
 			size2);
 
-		fillTimestamps(channel, index2, size2, timestamp + size1);
+		fillTimestamps(destChannel, index2, size2, timestamp + size1);
 	}
-	m_fifos[channel]->finishedWrite(size1 + size2);
+	m_fifos[destChannel]->finishedWrite(size1 + size2);
 }
 
 /*

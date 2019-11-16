@@ -46,7 +46,7 @@ public:
 
 	//Only the methods after this comment are considered thread-safe.
 	//Caution must be had to avoid calling more than one of the methods above simulatenously
-	void writeChannel(const AudioSampleBuffer& buffer, int channel, int nSamples, int64 timestamp);
+	void writeChannel(const AudioSampleBuffer& buffer, int srcChannel, int destChannel, int nSamples, int64 timestamp);
 	bool startRead(Array<CircularBufferIndexes>& indexes, Array<int64>& timestamps, int nMax);
 	const AudioSampleBuffer& getAudioBufferReference() const;
 	void stopRead();

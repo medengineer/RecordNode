@@ -165,10 +165,13 @@ void RecordNode::setParameter(int parameterIndex, float newValue)
 
 void RecordNode::updateSettings()
 {
+	/*
 	LOGD(__FUNCTION__);
 	LOGD("Number of channels: ", dataChannelArray.size());
+	*/
 
-	parChannelMap.clear();
+
+	subProcessorMap.clear();
 	int subProcIdx = -1;
 	std::vector<int> subProcChannels;
 
@@ -181,7 +184,7 @@ void RecordNode::updateSettings()
 		{
 			subProcIdx = chan->getSubProcessorIdx();
 			if (subProcChannels.size())
-				parChannelMap.push_back(subProcChannels);
+				subProcessorMap.push_back(subProcChannels);
 			subProcChannels = {ch};
 		}
 		else
@@ -189,12 +192,17 @@ void RecordNode::updateSettings()
 			subProcChannels.push_back(ch);
 		}
 	}
-	parChannelMap.push_back(subProcChannels);
+	subProcessorMap.push_back(subProcChannels);
+
+	subProcessorChannelCount = subProcChannels.size();
 
 }
 
 void RecordNode::startRecording()
 {
+
+	updateSettings(); 
+	
 	/* Got signal from plugin-GUI to start recording */
 	if (newDirectoryNeeded)
 	{
@@ -231,14 +239,21 @@ void RecordNode::startRecording()
 	Array<int> chanProcessorMap;
 	Array<int> chanOrderinProc;
 	int lastProcessor = -1;
+	int lastSubProcessor = -1;
 	int procIndex = -1;
 	int chanProcOrder = 0;
 	for (int ch = 0; ch < totChans; ++ch)
 	{
 		DataChannel* chan = dataChannelArray[ch];
+
 		if (chan->getRecordState())
 		{
 			channelMap.add(ch);
+			if (chan->getSubProcessorIdx() > lastSubProcessor)
+			{
+				lastSubProcessor = chan->getSubProcessorIdx();
+				startRecChannels.push_back(ch);
+			}
 			//This is bassed on the assumption that all channels from the same processor are added contiguously
 			//If this behaviour changes, this check should be most thorough
 			if (chan->getCurrentNodeID() != lastProcessor)
@@ -328,16 +343,22 @@ void RecordNode::process(AudioSampleBuffer& buffer)
 
 		for (int ch = 0; ch < channelMap.size(); ch++)
 		{
-			int nSamples = getNumSamples(ch);
+
+			if (isFirstChannelInRecordedSubprocessor(channelMap[ch]))
+			{
+				numSamples = getNumSamples(channelMap[ch]);
+				timestamp = getTimestamp(channelMap[ch]);
+			}
+
 			bool shouldWrite = validBlocks[ch];
-			if (!shouldWrite && nSamples > 0)
+			if (!shouldWrite && numSamples > 0)
 			{
 				shouldWrite = true;
 				validBlocks.set(ch, true);
 			}
 			
 			if (shouldWrite)
-				dataQueue->writeChannel(buffer, ch, nSamples, getTimestamp(ch));
+				dataQueue->writeChannel(buffer, channelMap[ch], ch, numSamples, timestamp);
 		}
 
 		if (!setFirstBlock)
@@ -358,12 +379,13 @@ void RecordNode::process(AudioSampleBuffer& buffer)
 			}
 		}
 
-		scaleTime = recordThread->getScaleCount();
-		convertTime = recordThread->getConvertCount();
-		writeTime = recordThread->getWriteCount();
-
 	}
 
+}
+
+bool RecordNode::isFirstChannelInRecordedSubprocessor(int ch)
+{
+	return std::find(startRecChannels.begin(), startRecChannels.end(), ch) != startRecChannels.end();
 }
 
 

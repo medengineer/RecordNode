@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <math.h>
+#include <algorithm>
 
 #include <ProcessorHeaders.h>
 #include "RecordNodeEditor.h"
@@ -47,6 +48,8 @@ public:
 	int getExperimentNumber() const;
 	int getRecordingNumber() const;
 
+	bool isFirstChannelInRecordedSubprocessor(int channel);
+
 	void process(AudioSampleBuffer& buffer) override;
 
 	void stopRecording() override;
@@ -70,9 +73,8 @@ private:
 	int recordingNumber;
 
 	int64 timestamp;
-
-	int numChannels;
 	int numSamples;
+	int numChannels;
 
 	ScopedPointer<RecordEngine> recordEngine;
 
@@ -81,12 +83,13 @@ private:
 	ScopedPointer<EventMsgQueue> eventQueue;
 	ScopedPointer<SpikeMsgQueue> spikeQueue;
 
-	std::vector<std::vector<int>> parChannelMap;
+	Array<int> channelMap; //Map from record channel index to source channel index
+	std::vector<std::vector<int>> subProcessorMap;
+	int subProcessorChannelCount;
+	std::vector<int> startRecChannels;
 
 	Array<bool> validBlocks;
 	std::atomic<bool> setFirstBlock;
-
-	Array<int> channelMap;
 
 	//Profiling data structures
 	float scaleFactor;
