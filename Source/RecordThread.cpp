@@ -34,7 +34,8 @@ Thread("Record Thread"),
 m_engine(engine),
 recordNode(parentNode),
 m_receivedFirstBlock(false),
-m_cleanExit(true)
+m_cleanExit(true),
+samplesWritten(0)
 {
 }
 
@@ -142,6 +143,7 @@ void RecordThread::writeData(const AudioSampleBuffer& dataBuffer, int maxSamples
 		{
 			//EVERY_ENGINE->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index1), idx[chan].size1);
 			m_engine->writeData(chan, chan, dataBuffer.getReadPointer(chan, idx[chan].index1), idx[chan].size1);
+			samplesWritten+=idx[chan].size1;
 			if (idx[chan].size2 > 0)
 			{
 				timestamps.set(chan, timestamps[chan] + idx[chan].size1);
@@ -149,6 +151,7 @@ void RecordThread::writeData(const AudioSampleBuffer& dataBuffer, int maxSamples
 				m_engine->updateTimestamps(timestamps, chan);
 				//EVERY_ENGINE->writeData(chan, m_channelArray[chan], dataBuffer.getReadPointer(chan, idx[chan].index2), idx[chan].size2);
 				m_engine->writeData(chan, chan, dataBuffer.getReadPointer(chan, idx[chan].index2), idx[chan].size2);
+				samplesWritten += idx[chan].size2;
 			}
 		}
 	}
@@ -185,21 +188,6 @@ void RecordThread::writeData(const AudioSampleBuffer& dataBuffer, int maxSamples
 		m_engine->writeSpike(spikes[sp]->getExtra(), &spikes[sp]->getData());
 	}
 	
-}
-
-int64 RecordThread::getScaleCount()
-{
-	return m_engine->scaleCount;
-}
-
-int64 RecordThread::getConvertCount()
-{
-	return m_engine->convertCount;
-}
-
-int64 RecordThread::getWriteCount()
-{
-	return m_engine->writeCount;
 }
 
 void RecordThread::forceCloseFiles()

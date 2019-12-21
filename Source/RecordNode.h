@@ -56,9 +56,10 @@ public:
 
 	void setParameter(int parameterIndex, float newValue) override;
 
-	int64 scaleTime;
-	int64 convertTime;
-	int64 writeTime;
+	ScopedPointer<RecordThread> recordThread;
+	ScopedPointer<RecordEngine> recordEngine;
+
+	int64 samplesWritten;
 
 private:
 
@@ -76,9 +77,6 @@ private:
 	int numSamples;
 	int numChannels;
 
-	ScopedPointer<RecordEngine> recordEngine;
-
-	ScopedPointer<RecordThread> recordThread;
 	ScopedPointer<DataQueue> dataQueue;
 	ScopedPointer<EventMsgQueue> eventQueue;
 	ScopedPointer<SpikeMsgQueue> spikeQueue;

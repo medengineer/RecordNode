@@ -502,6 +502,10 @@ void BinaryRecording::increaseEventCounts(EventRecording* rec)
 
 void BinaryRecording::writeData(int writeChannel, int realChannel, const float* buffer, int size)
 {
+
+    if (!size)
+        return;
+
 	if (size > m_bufferSize) //shouldn't happen, but if does, this prevents crash...
 	{
 		std::cerr << "[RN] Write buffer overrun, resizing from: " << m_bufferSize << " to: " << size << std::endl;
@@ -511,25 +515,16 @@ void BinaryRecording::writeData(int writeChannel, int realChannel, const float* 
 		m_bufferSize = size;
 	}
 
-	auto t1 = TIC;
 	double multFactor = 1 / (float(0x7fff) * getDataChannel(realChannel)->getBitVolts());
 	FloatVectorOperations::copyWithMultiply(m_scaledBuffer.getData(), buffer, multFactor, size);
-	auto t2 = TIC;
-	scaleCount += int((t2 - t1).count());
 
-	t1 = TIC;
 	AudioDataConverters::convertFloatToInt16LE(m_scaledBuffer.getData(), m_intBuffer.getData(), size);
-	t2 = TIC;
-	convertCount += int((t2 - t1).count());
 
-	t1 = TIC;
 	int fileIndex = m_fileIndexes[writeChannel];
 	m_DataFiles[fileIndex]->writeChannel(
 		getTimestamp(writeChannel) - m_startTS[writeChannel],
 		m_channelIndexes[writeChannel],
 		m_intBuffer.getData(), size);
-	t2 = TIC;
-	writeCount += int((t2 - t1).count());
 
 	if (m_channelIndexes[writeChannel] == 0)
 	{

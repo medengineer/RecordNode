@@ -51,14 +51,12 @@ public:
 	void setFirstBlockFlag(bool state);
 	void forceCloseFiles();
 
-	int64 getScaleCount();
-	int64 getConvertCount();
-	int64 getWriteCount();
+	RecordNode *recordNode;
+	int64 samplesWritten;
 
 private:
 	void writeData(const AudioSampleBuffer& buffer, int maxSamples, int maxEvents, int maxSpikes, bool lastBlock = false);
 
-	RecordNode* recordNode;
 	//const OwnedArray<RecordEngine>& m_engineArray;
 	const ScopedPointer<RecordEngine>& m_engine;
 	Array<int> m_channelArray;

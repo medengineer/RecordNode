@@ -31,51 +31,19 @@ RecordNodeEditor::RecordNodeEditor(RecordNode* parentNode, bool useDefaultParame
 {
 
 	recordNode = parentNode;
-/*
+
 	desiredWidth = 120;
 
-	scaleStringLabel = new Label("scaleLabel", "Copy time:");
-	scaleStringLabel->setBounds(10, 23, 80, 20);
-	scaleStringLabel->setFont(Font("Small Text", 11, Font::plain));
-	scaleStringLabel->setColour(Label::textColourId, Colours::darkgrey);
-	addAndMakeVisible(scaleStringLabel);
+	firstBuffer = new FifoMonitor(recordNode->recordThread);
+	firstBuffer->setBounds(10,40,15,75);
+	addAndMakeVisible(firstBuffer);
 
-	convertStringLabel = new Label("convertLabel", "Convert time:");
-	convertStringLabel->setBounds(10, 58, 80, 20);
-	convertStringLabel->setFont(Font("Small Text", 11, Font::plain));
-	convertStringLabel->setColour(Label::textColourId, Colours::darkgrey);
-	addAndMakeVisible(convertStringLabel);
+	secondBuffer = new FifoMonitor(recordNode->recordThread);
+	secondBuffer->setBounds(30, 40, 15, 75);
+	addAndMakeVisible(secondBuffer);
 
-	writeStringLabel = new Label("writeLabel", "Write time:");
-	writeStringLabel->setBounds(10, 93, 80, 20);
-	writeStringLabel->setFont(Font("Small Text", 11, Font::plain));
-	writeStringLabel->setColour(Label::textColourId, Colours::darkgrey);
-	addAndMakeVisible(writeStringLabel);
+	//startTimer(500);
 
-	scaleTimeLabel = new Label("scaleTime", "0");
-	scaleTimeLabel->setBounds(15, 40, 60, 18);
-	scaleTimeLabel->setFont(Font("Default", 14, Font::plain));
-	scaleTimeLabel->setColour(Label::textColourId, Colours::white);
-	scaleTimeLabel->setColour(Label::backgroundColourId, Colours::grey);
-	addAndMakeVisible(scaleTimeLabel);
-
-	convertTimeLabel = new Label("convertTime", "0");
-	convertTimeLabel->setBounds(15, 75, 60, 18);
-	convertTimeLabel->setFont(Font("Default", 14, Font::plain));
-	convertTimeLabel->setColour(Label::textColourId, Colours::white);
-	convertTimeLabel->setColour(Label::backgroundColourId, Colours::grey);
-	addAndMakeVisible(convertTimeLabel);
-
-	writeTimeLabel = new Label("writeTime", "0");
-	writeTimeLabel->setBounds(15, 110, 60, 18);
-	writeTimeLabel->setFont(Font("Default", 14, Font::plain));
-	writeTimeLabel->setColour(Label::textColourId, Colours::white);
-	writeTimeLabel->setColour(Label::backgroundColourId, Colours::grey);
-	addAndMakeVisible(writeTimeLabel);
-
-	startTimer(500);
-
-*/
 
 }
 
@@ -87,19 +55,45 @@ RecordNodeEditor::~RecordNodeEditor()
 void RecordNodeEditor::timerCallback()
 {
 
-	int scaleTime = recordNode->scaleTime;
-	int convertTime = recordNode->convertTime;
-	int writeTime = recordNode->writeTime;
-
-	float total = (scaleTime + convertTime + writeTime) / 100;
-
-	if (total > 0)
-	{
-		scaleTimeLabel->setText(String(scaleTime / total), dontSendNotification);
-		convertTimeLabel->setText(String(convertTime / total), dontSendNotification);
-		writeTimeLabel->setText(String(writeTime / total), dontSendNotification);
-	}
 
 }
 
+FifoMonitor::FifoMonitor(RecordThread *thread_) : thread(thread_), fillPercentage(0.0)
+{
+	startTimer(1000); // update fill percentage every 0.5 seconds
+}
 
+void FifoMonitor::timerCallback()
+{
+	//TODO
+	if (thread->isThreadRunning())
+	{
+		std::cout << "First buffer: " << thread->recordNode->samplesWritten << std::endl;
+		std::cout << "Second buffer: " << thread->samplesWritten << std::endl;
+		setFillPercentage(0.5f);
+	}
+	else {
+		setFillPercentage(0.25f);
+	}
+
+
+}
+
+void FifoMonitor::setFillPercentage(float fill_)
+{
+	fillPercentage = fill_;
+
+	repaint();
+}
+
+void FifoMonitor::paint(Graphics &g)
+{
+	g.setColour(Colours::grey);
+	g.fillRoundedRectangle(0, 0, this->getWidth(), this->getHeight(), 4);
+	g.setColour(Colours::lightslategrey);
+	g.fillRoundedRectangle(2, 2, this->getWidth() - 4, this->getHeight() - 4, 2);
+
+	g.setColour(Colours::yellow);
+	float barHeight = (this->getHeight() - 4) * fillPercentage;
+	g.fillRoundedRectangle(2, this->getHeight() - 2 - barHeight, this->getWidth() - 4, barHeight, 2);
+}

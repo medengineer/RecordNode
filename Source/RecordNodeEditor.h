@@ -26,7 +26,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <EditorHeaders.h>
 
+class RecordThread;
 class RecordNode;
+
+class FifoMonitor : public Component, public Timer
+{
+public:
+	FifoMonitor(RecordThread *thread);
+
+	void setFillPercentage(float percentage);
+
+	void timerCallback();
+
+private:
+	void paint(Graphics &g);
+
+	float fillPercentage;
+	RecordThread *thread;
+	int id;
+};
 
 class RecordNodeEditor : public GenericEditor
 {
@@ -41,17 +59,8 @@ private:
 
 	RecordNode* recordNode;
 
-	String lastScaleTime;
-	String lastConvertTime;
-	String lastWriteTime;
-
-	ScopedPointer<Label> scaleStringLabel;
-	ScopedPointer<Label> convertStringLabel;
-	ScopedPointer<Label> writeStringLabel;
-
-	ScopedPointer<Label> scaleTimeLabel;
-	ScopedPointer<Label> convertTimeLabel;
-	ScopedPointer<Label> writeTimeLabel;
+	ScopedPointer<FifoMonitor> firstBuffer;
+	ScopedPointer<FifoMonitor> secondBuffer;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RecordNodeEditor);
 

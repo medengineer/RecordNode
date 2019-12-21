@@ -44,6 +44,9 @@ SequentialBlockFile::~SequentialBlockFile()
 		m_memBlocks.remove(0);
 	}
 
+	LOGD(__FUNCTION__);
+
+
 	//manually flush the last one to avoid trailing zeroes
 	m_memBlocks[0]->partialFlush(m_lastBlockFill * m_nChannels);
 }

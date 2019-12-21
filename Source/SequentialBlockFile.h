@@ -2,6 +2,7 @@
 #define SEQUENTIALBLOCKFILE_H
 
 #include "FileMemoryBlock.h"
+#include "Utils.h"
 
 typedef FileMemoryBlock<int16> FileBlock;
 

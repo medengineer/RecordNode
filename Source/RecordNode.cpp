@@ -9,14 +9,12 @@ RecordNode::RecordNode()
 	setFirstBlock(false),
 	numChannels(0),
 	numSamples(0),
+	samplesWritten(0),
 	experimentNumber(0),
 	recordingNumber(2),
 	isRecording(false),
 	hasRecorded(false),
-	settingsNeeded(false),
-	scaleTime(0),
-	convertTime(0),
-	writeTime(0)
+	settingsNeeded(false)
 {
 	setProcessorType(PROCESSOR_TYPE_FILTER);
 
@@ -358,7 +356,11 @@ void RecordNode::process(AudioSampleBuffer& buffer)
 			}
 			
 			if (shouldWrite)
+			{
 				dataQueue->writeChannel(buffer, channelMap[ch], ch, numSamples, timestamp);
+				samplesWritten+=numSamples;
+			}
+
 		}
 
 		if (!setFirstBlock)
