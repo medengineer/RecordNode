@@ -55,10 +55,16 @@ bool SequentialBlockFile::openFile(String filename)
 {
 	File file(filename);
 	Result res = file.create();
+	std::cout << "***Creating file: " << filename << std::endl;
 	if (res.failed())
 	{
 		std::cerr << "Error creating file " << filename << ":" << res.getErrorMessage() << std::endl;
-		return false;
+		file.deleteFile();
+		Result res = file.create();
+		std::cout << "Re-creating file: " << filename << std::endl;
+	}
+	else {
+		std::cout << "Succesfully created file: " << filename << std::endl;
 	}
 	m_file = file.createOutputStream(streamBufferSize);
 	if (!m_file)

@@ -44,11 +44,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 struct RecordProcessorInfo
 {
 	int processorId;
+	String processorName;
 	Array<int> recordedChannels; //Indexes of the recorded channels. From 0-maxRecordChannels, not 0-totalChannels
 };
 
 struct EngineParameter;
 class RecordEngineManager;
+
+class RecordNode;
 
 
 class RecordEngine
@@ -136,6 +139,7 @@ public:
 	/** Called prior to opening files, to set the map between recorded channels and actual channel numbers */
 	void setChannelMapping(const Array<int>& channels, const Array<int>& chanProcessor, const Array<int>& chanOrder, OwnedArray<RecordProcessorInfo>& processors);
 
+	void registerRecordNode(RecordNode* node);
 	/** Called after all channels and spike groups have been registered, just before acquisition starts */
 	virtual void startAcquisition();
 
@@ -151,6 +155,7 @@ public:
 
 protected:
 	/** Functions to access RecordNode arrays and utilities */
+	RecordNode* recordNode;
 
 	/** Gets the specified channel from the channel array stored in RecordNode */
 	const DataChannel* getDataChannel(int index) const;
@@ -203,6 +208,7 @@ protected:
 	const String& getLatestSettingsXml() const;
 
 private:
+
 	Array<int64> timestamps;
 	Array<int> channelMap;
 	Array<int> chanProcessorMap;

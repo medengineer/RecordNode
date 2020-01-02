@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "OriginalRecording.h"
 
 RecordEngine::RecordEngine()
-	: manager(nullptr)
+	: manager(nullptr), recordNode(nullptr)
 {
 }
 
@@ -40,7 +40,13 @@ void RecordEngine::setParameter(EngineParameter& parameter) {}
 
 void RecordEngine::resetChannels() {}
 
-void RecordEngine::registerProcessor(const GenericProcessor* processor) {}
+void RecordEngine::registerRecordNode(RecordNode* node)
+{
+	recordNode = node;
+}
+
+void RecordEngine::registerProcessor(const GenericProcessor* processor) {
+}
 
 void RecordEngine::addDataChannel(int index, const DataChannel* chan) {}
 
@@ -52,27 +58,25 @@ void RecordEngine::startChannelBlock(bool lastBlock) {}
 
 void RecordEngine::endChannelBlock(bool lastBlock) {}
 
-/*
 const DataChannel* RecordEngine::getDataChannel(int index) const
 {
-	return AccessClass::getProcessorGraph()->getRecordNode()->getDataChannel(index);
+	return recordNode->getDataChannel(index);
 }
 
 const EventChannel* RecordEngine::getEventChannel(int index) const
 {
-	return AccessClass::getProcessorGraph()->getRecordNode()->getEventChannel(index);
+	return recordNode->getEventChannel(index);
 }
 
 const SpikeChannel* RecordEngine::getSpikeChannel(int index) const
 {
-	return AccessClass::getProcessorGraph()->getRecordNode()->getSpikeChannel(index);
+	return recordNode->getSpikeChannel(index);
 }
 
 String RecordEngine::generateDateString() const
 {
-	return AccessClass::getProcessorGraph()->getRecordNode()->generateDateString();
+	return recordNode->generateDateString();
 }
-*/
 
 void RecordEngine::updateTimestamps(const Array<int64>& ts, int channel)
 {
@@ -105,17 +109,15 @@ int RecordEngine::getNumRecordedChannels() const
 	return channelMap.size();
 }
 
-/*
 int RecordEngine::getNumRecordedEvents() const
 {
-	return AccessClass::getProcessorGraph()->getRecordNode()->getTotalEventChannels();
+	return recordNode->getTotalEventChannels();
 }
 
 int RecordEngine::getNumRecordedSpikes() const
 {
-	return AccessClass::getProcessorGraph()->getRecordNode()->getTotalSpikeChannels();
+	return recordNode->getTotalSpikeChannels();
 }
-*/
 
 void RecordEngine::registerSpikeSource(const GenericProcessor* processor) {}
 
@@ -139,12 +141,10 @@ int RecordEngine::getChannelNumInProc(int channel) const
 	return chanOrderMap[channel];
 }
 
-/*
 const String& RecordEngine::getLatestSettingsXml() const
 {
-	return AccessClass::getProcessorGraph()->getRecordNode()->getLastSettingsXml();
+	return recordNode->getLastSettingsXml();
 }
-*/
 
 void RecordEngine::startAcquisition() {}
 

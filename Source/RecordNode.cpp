@@ -11,7 +11,7 @@ RecordNode::RecordNode()
 	numSamples(0),
 	samplesWritten(0),
 	experimentNumber(0),
-	recordingNumber(2),
+	recordingNumber(0),
 	isRecording(false),
 	hasRecorded(false),
 	settingsNeeded(false)
@@ -23,6 +23,7 @@ RecordNode::RecordNode()
 	spikeQueue = new SpikeMsgQueue(SPIKE_BUFFER_NSPIKES);
 
 	recordEngine = new BinaryRecording();
+	recordEngine->registerRecordNode(this);
 	recordEngine->resetChannels();
 
 	recordThread = new RecordThread(this, recordEngine);
@@ -80,9 +81,10 @@ String RecordNode::generateDirectoryName()
 
 void RecordNode::createNewDirectory()
 {
-	LOGD(__FUNCTION__, " Creating new directory.");
 
-	dataDirectory = File::getCurrentWorkingDirectory();
+	dataDirectory = CoreServices::getRecordingDirectory();
+
+	LOGD(__FUNCTION__, dataDirectory.getFullPathName());
 
 	rootFolder = File(dataDirectory.getFullPathName() + File::separator + generateDirectoryName());
 
@@ -148,6 +150,11 @@ void RecordNode::prepareToPlay(double sampleRate, int estimatedSamplesPerBlock)
 	/* This gets called right when the play button is pressed*/
 }
 
+const String &RecordNode::getLastSettingsXml() const
+{
+	return lastSettingsText;
+}
+
 /* Use this function to change paramaters while recording...*/
 void RecordNode::setParameter(int parameterIndex, float newValue)
 {
@@ -191,8 +198,9 @@ void RecordNode::updateSettings()
 		}
 	}
 	subProcessorMap.push_back(subProcChannels);
-
 	subProcessorChannelCount = subProcChannels.size();
+
+	//setAllChannelsToRecord(); 
 
 }
 
@@ -265,6 +273,7 @@ void RecordNode::startRecording()
 			}
 			procInfo.getLast()->recordedChannels.add(channelMap.size() - 1);
 			chanProcessorMap.add(procIndex);
+
 			chanOrderinProc.add(chanProcOrder);
 			chanProcOrder++;
 		}

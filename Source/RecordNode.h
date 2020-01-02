@@ -60,6 +60,10 @@ public:
 	ScopedPointer<RecordEngine> recordEngine;
 
 	int64 samplesWritten;
+	String lastSettingsText;
+
+	/** Get the last settings.xml in string form. Since the string will be large, returns a const ref.*/
+	const String &getLastSettingsXml() const;
 
 private:
 
