@@ -39,9 +39,12 @@ String BinaryRecording::getProcessorString(const InfoObjectCommon* channelInfo)
 void BinaryRecording::openFiles(File rootFolder, int experimentNumber, int recordingNumber)
 {
 
+    const RecordProcessorInfo* pInfo = getProcessorInfo();
+
 	String basepath = rootFolder.getFullPathName() + rootFolder.separatorString + "experiment" + String(experimentNumber)
         + File::separatorString + "recording" + String(recordingNumber + 1) + File::separatorString;
-    String contPath = basepath + "continuous" + File::separatorString;
+    String nodePath = basepath + pInfo->processorName + File::separatorString;
+    String contPath = nodePath + "continuous" + File::separatorString;
 
     m_channelIndexes.insertMultiple(0, 0, getNumRecordedChannels());
     m_fileIndexes.insertMultiple(0, 0, getNumRecordedChannels());
@@ -53,7 +56,6 @@ void BinaryRecording::openFiles(File rootFolder, int experimentNumber, int recor
     StringArray continuousFileNames;
     int lastId = 0;
 
-    const RecordProcessorInfo* pInfo = getProcessorInfo();
     int recChans = pInfo->recordedChannels.size();
 
     for (int chan = 0; chan < recChans; chan++)
@@ -143,7 +145,7 @@ void BinaryRecording::openFiles(File rootFolder, int experimentNumber, int recor
     }
 
     int nEvents = getNumRecordedEvents();
-    String eventPath(basepath + "events" + File::separatorString);
+    String eventPath(nodePath + "events" + File::separatorString);
     Array<var> jsonEventFiles;
 
     for (int ev = 0; ev < nEvents; ev++)
@@ -203,7 +205,7 @@ void BinaryRecording::openFiles(File rootFolder, int experimentNumber, int recor
     Array<uint16> indexedChannels;
     m_spikeFileIndexes.insertMultiple(0, 0, nSpikes);
     m_spikeChannelIndexes.insertMultiple(0, 0, nSpikes);
-    String spikePath(basepath + "spikes" + File::separatorString);
+    String spikePath(nodePath + "spikes" + File::separatorString);
     Array<var> jsonSpikeFiles;
     Array<var> jsonSpikeChannels;
     std::map<uint32, int> groupMap;
@@ -292,7 +294,7 @@ void BinaryRecording::openFiles(File rootFolder, int experimentNumber, int recor
         jsonFile->setProperty("channels", jsonSpikeChannels.getReference(i));
     }
 
-    File syncFile = File(basepath + "sync_messages.txt");
+    File syncFile = File(nodePath + "sync_messages.txt");
     Result res = syncFile.create();
     if (res.failed())
     {
@@ -310,7 +312,7 @@ void BinaryRecording::openFiles(File rootFolder, int experimentNumber, int recor
     jsonSettingsFile->setProperty("continuous", jsonContinuousfiles);
     jsonSettingsFile->setProperty("events", jsonEventFiles);
     jsonSettingsFile->setProperty("spikes", jsonSpikeFiles);
-    FileOutputStream settingsFileStream(File(basepath + "structure.oebin"));
+    FileOutputStream settingsFileStream(File(nodePath + "structure.oebin"));
 
     jsonSettingsFile->writeAsJSON(settingsFileStream, 2, false);
 

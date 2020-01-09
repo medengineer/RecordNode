@@ -248,6 +248,8 @@ void RecordNode::startRecording()
 	int procIndex = -1;
 	int chanProcOrder = 0;
 	RecordProcessorInfo* procInfo = new RecordProcessorInfo();
+	procInfo->processorName = getName().replaceCharacter(' ', '_') + "-" + String(getNodeId());
+	
 	for (int ch = 0; ch < totChans; ++ch)
 	{
 		DataChannel* chan = dataChannelArray[ch];
