@@ -241,13 +241,13 @@ void RecordNode::startRecording()
 	channelMap.clear();
 	int totChans = dataChannelArray.size();
 	LOGD(__FUNCTION__, " totChans: ", totChans);
-	OwnedArray<RecordProcessorInfo> procInfo;
 	Array<int> chanProcessorMap;
 	Array<int> chanOrderinProc;
 	int lastProcessor = -1;
 	int lastSubProcessor = -1;
 	int procIndex = -1;
 	int chanProcOrder = 0;
+	RecordProcessorInfo* procInfo = new RecordProcessorInfo();
 	for (int ch = 0; ch < totChans; ++ch)
 	{
 		DataChannel* chan = dataChannelArray[ch];
@@ -265,20 +265,18 @@ void RecordNode::startRecording()
 			if (chan->getCurrentNodeID() != lastProcessor)
 			{
 				lastProcessor = chan->getCurrentNodeID();
-				RecordProcessorInfo* pi = new RecordProcessorInfo();
-				pi->processorId = chan->getCurrentNodeID();
-				procInfo.add(pi);
+				procInfo->processorId = chan->getCurrentNodeID();
 				procIndex++;
 				chanProcOrder = 0;
 			}
-			procInfo.getLast()->recordedChannels.add(channelMap.size() - 1);
+			procInfo->recordedChannels.add(channelMap.size() - 1);
 			chanProcessorMap.add(procIndex);
 
 			chanOrderinProc.add(chanProcOrder);
 			chanProcOrder++;
 		}
 	}
-	std::cout << "Num Recording Processors: " << procInfo.size() << std::endl;
+
 	int numRecordedChannels = channelMap.size();
 	
 	validBlocks.clear();
