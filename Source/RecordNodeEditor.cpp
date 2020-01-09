@@ -34,16 +34,23 @@ RecordNodeEditor::RecordNodeEditor(RecordNode* parentNode, bool useDefaultParame
 
 	desiredWidth = 120;
 
-	firstBuffer = new FifoMonitor(recordNode->recordThread);
-	firstBuffer->setBounds(10,40,15,75);
-	addAndMakeVisible(firstBuffer);
+	fifoDrawerButton = new FifoDrawerButton("FifoDrawer");
+	fifoDrawerButton->setBounds(4, 40, 10, 78);
+	addAndMakeVisible(fifoDrawerButton);
 
-	secondBuffer = new FifoMonitor(recordNode->recordThread);
-	secondBuffer->setBounds(30, 40, 15, 75);
-	addAndMakeVisible(secondBuffer);
+	masterLabel = new Label("masterLabel", "MASTER");
+	masterLabel->setBounds(8, 21, 40, 20);
+	masterLabel->setFont(Font("Small Text", 8.0f, Font::plain));
+	addAndMakeVisible(masterLabel);
 
-	//startTimer(500);
+	masterMonitor = new FifoMonitor(recordNode->recordThread);
+	masterMonitor->setBounds(18, 43, 15, 62);
+	addAndMakeVisible(masterMonitor);
 
+	masterRecord = new RecordButton("MasterRecord");
+	masterRecord->setBounds(18, 110, 15, 15);
+	masterRecord->addListener(this);
+	addAndMakeVisible(masterRecord);
 
 }
 
@@ -58,23 +65,100 @@ void RecordNodeEditor::timerCallback()
 
 }
 
+void RecordNodeEditor::buttonClicked(Button *button)
+{
+
+	std::cout << "Button state: " << button->getToggleState() << std::endl;
+
+	checkDrawerButton(button);
+
+	buttonEvent(button); // needed to inform subclasses of
+	// button event
+}
+
+FifoDrawerButton::FifoDrawerButton(const String &name) : DrawerButton(name)
+{
+}
+
+FifoDrawerButton::~FifoDrawerButton()
+{
+}
+
+void FifoDrawerButton::paintButton(Graphics &g, bool isMouseOver, bool isButtonDown)
+{
+	if (isMouseOver)
+		g.setColour(Colour(210, 210, 210));
+	else
+		g.setColour(Colour(110, 110, 110));
+
+	g.drawVerticalLine(3, 0.0f, getHeight());
+	g.drawVerticalLine(5, 0.0f, getHeight());
+	g.drawVerticalLine(7, 0.0f, getHeight());
+}
+
+RecordButton::RecordButton(const String& name) : Button(name) {
+	setClickingTogglesState(true);
+}
+
+RecordButton::~RecordButton() {}
+
+void RecordButton::paintButton(Graphics &g, bool isMouseOver, bool isButtonDown)
+{
+
+	g.setColour(Colour(0,0,0));
+	g.fillEllipse(0,0,getWidth(),getHeight());
+
+	if (isMouseOver)
+	{
+		if (getToggleState())
+		{
+			g.setColour(Colour(255, 65, 65));
+		}
+		else
+		{
+			g.setColour(Colour(210, 210, 210));
+		}
+	}
+	else
+	{
+		if (getToggleState())
+		{
+			g.setColour(Colour(255, 0, 0));
+		}
+		else
+		{
+			g.setColour(Colour(110, 110, 110));
+		}
+	}
+	g.fillEllipse(1,1,getWidth()-2,getHeight()-2);
+
+
+	/*Draw static black circle in center on top */
+	g.setColour(Colour(0,0,0));
+	g.fillEllipse(0.35*getWidth(), 0.35*getHeight(), 0.3*getWidth(), 0.3*getHeight());
+
+}
+
+
 FifoMonitor::FifoMonitor(RecordThread *thread_) : thread(thread_), fillPercentage(0.0)
 {
-	startTimer(1000); // update fill percentage every 0.5 seconds
+	startTimer(200);
 }
 
 void FifoMonitor::timerCallback()
 {
-	//TODO
+	
 	if (thread->isThreadRunning())
 	{
-		std::cout << "First buffer: " << thread->recordNode->samplesWritten << std::endl;
-		std::cout << "Second buffer: " << thread->samplesWritten << std::endl;
 		setFillPercentage(0.5f);
 	}
-	else {
-		setFillPercentage(0.25f);
+	else 
+	{
+		setFillPercentage(random.nextFloat());
 	}
+
+	//JFF: Generate a random # between 0-1 and
+	
 
 
 }
@@ -93,7 +177,13 @@ void FifoMonitor::paint(Graphics &g)
 	g.setColour(Colours::lightslategrey);
 	g.fillRoundedRectangle(2, 2, this->getWidth() - 4, this->getHeight() - 4, 2);
 
-	g.setColour(Colours::yellow);
+	if (fillPercentage < 0.5)	
+		g.setColour(Colours::yellow);
+	else if (fillPercentage < 0.75)
+		g.setColour(Colours::orange);
+	else
+		g.setColour(Colours::red);
+	
 	float barHeight = (this->getHeight() - 4) * fillPercentage;
 	g.fillRoundedRectangle(2, this->getHeight() - 2 - barHeight, this->getWidth() - 4, barHeight, 2);
 }

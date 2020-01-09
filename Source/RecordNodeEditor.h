@@ -29,6 +29,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 class RecordThread;
 class RecordNode;
 
+class FifoDrawerButton : public DrawerButton
+{
+public:
+	FifoDrawerButton(const String& name);
+	~FifoDrawerButton();
+private:
+	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown) override;
+};
+
 class FifoMonitor : public Component, public Timer
 {
 public:
@@ -44,9 +53,19 @@ private:
 	float fillPercentage;
 	RecordThread *thread;
 	int id;
+	Random random;
 };
 
-class RecordNodeEditor : public GenericEditor
+class RecordButton : public Button
+{
+public: 
+	RecordButton(const String& name);
+	~RecordButton();
+private:
+	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown) override;
+};
+
+class RecordNodeEditor : public GenericEditor, public Button::Listener
 {
 public:
 
@@ -59,8 +78,12 @@ private:
 
 	RecordNode* recordNode;
 
-	ScopedPointer<FifoMonitor> firstBuffer;
-	ScopedPointer<FifoMonitor> secondBuffer;
+	ScopedPointer<FifoDrawerButton> fifoDrawerButton;
+	ScopedPointer<Label> masterLabel;
+	ScopedPointer<FifoMonitor> masterMonitor;
+	ScopedPointer<RecordButton> masterRecord;
+
+	virtual void buttonClicked(Button *button) override;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RecordNodeEditor);
 
