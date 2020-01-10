@@ -72,6 +72,9 @@ public:
 	RecordNodeEditor(RecordNode* parentNode, bool useDefaultParameterEditors);
 	virtual ~RecordNodeEditor();
 
+	void updateSubprocessorFifos();
+	void showSubprocessorFifos(bool);
+
 	void timerCallback();
 
 private:
@@ -79,6 +82,9 @@ private:
 	RecordNode* recordNode;
 
 	ScopedPointer<FifoDrawerButton> fifoDrawerButton;
+	OwnedArray<Label> subProcLabels;
+	OwnedArray<FifoMonitor> subProcMonitors;
+	OwnedArray<RecordButton> subProcRecords;
 	ScopedPointer<Label> masterLabel;
 	ScopedPointer<FifoMonitor> masterMonitor;
 	ScopedPointer<RecordButton> masterRecord;

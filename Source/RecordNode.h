@@ -37,7 +37,10 @@ public:
 	AudioProcessorEditor* createEditor() override;
 	bool hasEditor() const override { return true; }
 
+	void updateSubprocessors();
+
 	void updateSettings() override;
+	int getNumSubProcessors() const override;
 
 	void prepareToPlay(double sampleRate, int estimatedSamplesPerBlock);
 	void startRecording() override;

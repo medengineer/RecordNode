@@ -29,6 +29,8 @@ RecordNode::RecordNode()
 	recordThread = new RecordThread(this, recordEngine);
 	recordThread->setQueuePointers(dataQueue, eventQueue, spikeQueue);
 
+	updateSubprocessors();
+
 }
 
 RecordNode::~RecordNode()
@@ -168,22 +170,15 @@ void RecordNode::setParameter(int parameterIndex, float newValue)
 
 }
 
-void RecordNode::updateSettings()
+void RecordNode::updateSubprocessors()
 {
-	/*
-	LOGD(__FUNCTION__);
-	LOGD("Number of channels: ", dataChannelArray.size());
-	*/
-
-
 	subProcessorMap.clear();
 	int subProcIdx = -1;
 	std::vector<int> subProcChannels;
 
-	/* Build processor channel map here for now, need to move into startRecording to enable channel selection */
 	for (int ch = 0; ch < dataChannelArray.size(); ch++)
 	{
-		DataChannel* chan = dataChannelArray[ch];
+		DataChannel *chan = dataChannelArray[ch];
 		chan->setRecordState(true);
 		if (chan->getSubProcessorIdx() > subProcIdx)
 		{
@@ -199,9 +194,16 @@ void RecordNode::updateSettings()
 	}
 	subProcessorMap.push_back(subProcChannels);
 	subProcessorChannelCount = subProcChannels.size();
+}
 
-	//setAllChannelsToRecord(); 
+int RecordNode::getNumSubProcessors() const
+{
+	return subProcessorMap.size();
+}
 
+void RecordNode::updateSettings()
+{
+	updateSubprocessors();
 }
 
 void RecordNode::startRecording()
@@ -249,7 +251,7 @@ void RecordNode::startRecording()
 	int chanProcOrder = 0;
 	RecordProcessorInfo* procInfo = new RecordProcessorInfo();
 	procInfo->processorName = getName().replaceCharacter(' ', '_') + "-" + String(getNodeId());
-	
+
 	for (int ch = 0; ch < totChans; ++ch)
 	{
 		DataChannel* chan = dataChannelArray[ch];

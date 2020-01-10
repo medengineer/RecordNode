@@ -32,14 +32,15 @@ RecordNodeEditor::RecordNodeEditor(RecordNode* parentNode, bool useDefaultParame
 
 	recordNode = parentNode;
 
-	desiredWidth = 120;
+	desiredWidth = 150;
 
 	fifoDrawerButton = new FifoDrawerButton("FifoDrawer");
 	fifoDrawerButton->setBounds(4, 40, 10, 78);
+	fifoDrawerButton->addListener(this);
 	addAndMakeVisible(fifoDrawerButton);
 
 	masterLabel = new Label("masterLabel", "MASTER");
-	masterLabel->setBounds(8, 21, 40, 20);
+	masterLabel->setBounds(7, 21, 40, 20);
 	masterLabel->setFont(Font("Small Text", 8.0f, Font::plain));
 	addAndMakeVisible(masterLabel);
 
@@ -65,15 +66,120 @@ void RecordNodeEditor::timerCallback()
 
 }
 
+void RecordNodeEditor::updateSubprocessorFifos()
+{
+	if (recordNode->getNumSubProcessors() != subProcMonitors.size())
+	{
+
+		subProcLabels.clear();
+		subProcMonitors.clear();
+		subProcRecords.clear();
+
+		for (int i = 0; i < recordNode->getNumSubProcessors(); i++)
+		{
+
+			subProcLabels.add(new Label("SP"+String(i)));
+			subProcLabels.getLast()->setBounds(8 + i *20, 21, 40, 20);
+			subProcLabels.getLast()->setFont(Font("Small Text", 8.0f, Font::plain));
+			addAndMakeVisible(subProcLabels.getLast());
+			subProcLabels.getLast()->setVisible(false);
+
+			subProcMonitors.add(new FifoMonitor(recordNode->recordThread));
+			subProcMonitors.getLast()->setBounds(18 + i * 20, 43, 15, 62);
+			addAndMakeVisible(subProcMonitors.getLast());
+			subProcMonitors.getLast()->setVisible(false);
+			
+			subProcRecords.add(new RecordButton("RecSP" + String(i)));
+			subProcRecords.getLast()->setBounds(18 + i * 20, 110, 15, 15);
+			subProcRecords.getLast()->addListener(this);
+			addAndMakeVisible(subProcRecords.getLast());
+			subProcRecords.getLast()->setVisible(false);
+		}
+	} 
+}
+
 void RecordNodeEditor::buttonClicked(Button *button)
 {
 
-	std::cout << "Button state: " << button->getToggleState() << std::endl;
+	if (button == masterRecord) 
+	{
 
-	checkDrawerButton(button);
+	}
+	else if (button == fifoDrawerButton)
+	{
 
-	buttonEvent(button); // needed to inform subclasses of
-	// button event
+		updateSubprocessorFifos();
+		if (button->getToggleState())
+			showSubprocessorFifos(true);
+		else
+			showSubprocessorFifos(false);
+	}
+
+	buttonEvent(button);
+	
+}
+
+void RecordNodeEditor::showSubprocessorFifos(bool show)
+{
+
+	int dX = 20 * (recordNode->getNumSubProcessors()) + 10;
+	if (show)
+	{
+
+		fifoDrawerButton->setBounds(
+			fifoDrawerButton->getX() + dX, fifoDrawerButton->getY(),
+			fifoDrawerButton->getWidth(), fifoDrawerButton->getHeight());
+
+		masterLabel->setBounds(
+			masterLabel->getX() + dX, masterLabel->getY(),
+			masterLabel->getWidth(), masterLabel->getHeight());
+
+		masterMonitor->setBounds(
+			masterMonitor->getX() + dX, masterMonitor->getY(),
+			masterMonitor->getWidth(), masterMonitor->getHeight());
+
+		masterRecord->setBounds(
+			masterRecord->getX() + dX, masterRecord->getY(),
+			masterRecord->getWidth(), masterRecord->getHeight());
+
+		for (auto spl : subProcLabels)
+			spl->setVisible(true);
+		for (auto spm : subProcMonitors)
+			spm->setVisible(true);
+		for (auto spr : subProcRecords)
+			spr->setVisible(true);
+
+		desiredWidth += dX;
+	}
+	else
+	{
+
+		fifoDrawerButton->setBounds(
+			fifoDrawerButton->getX() - dX, fifoDrawerButton->getY(),
+			fifoDrawerButton->getWidth(), fifoDrawerButton->getHeight());
+
+		masterLabel->setBounds(
+			masterLabel->getX() - dX, masterLabel->getY(),
+			masterLabel->getWidth(), masterLabel->getHeight());
+
+		masterMonitor->setBounds(
+			masterMonitor->getX() - dX, masterMonitor->getY(),
+			masterMonitor->getWidth(), masterMonitor->getHeight());
+
+		masterRecord->setBounds(
+			masterRecord->getX() - dX, masterRecord->getY(),
+			masterRecord->getWidth(), masterRecord->getHeight());
+
+		for (auto spl : subProcLabels)
+			spl->setVisible(false);
+		for (auto spm : subProcMonitors)
+			spm->setVisible(false);
+		for (auto spr : subProcRecords)
+			spr->setVisible(false);
+
+		desiredWidth -= dX;
+	}
+	CoreServices::updateSignalChain(this);
 }
 
 FifoDrawerButton::FifoDrawerButton(const String &name) : DrawerButton(name)
@@ -142,7 +248,7 @@ void RecordButton::paintButton(Graphics &g, bool isMouseOver, bool isButtonDown)
 
 FifoMonitor::FifoMonitor(RecordThread *thread_) : thread(thread_), fillPercentage(0.0)
 {
-	startTimer(200);
+	startTimer(500);
 }
 
 void FifoMonitor::timerCallback()
@@ -177,9 +283,9 @@ void FifoMonitor::paint(Graphics &g)
 	g.setColour(Colours::lightslategrey);
 	g.fillRoundedRectangle(2, 2, this->getWidth() - 4, this->getHeight() - 4, 2);
 
-	if (fillPercentage < 0.5)	
+	if (fillPercentage < 0.7)	
 		g.setColour(Colours::yellow);
-	else if (fillPercentage < 0.75)
+	else if (fillPercentage < 0.9)
 		g.setColour(Colours::orange);
 	else
 		g.setColour(Colours::red);
