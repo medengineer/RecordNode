@@ -72,6 +72,8 @@ public:
 	RecordNodeEditor(RecordNode* parentNode, bool useDefaultParameterEditors);
 	virtual ~RecordNodeEditor();
 
+	void collapsedStateChanged() override;
+
 	void updateSubprocessorFifos();
 	void showSubprocessorFifos(bool);
 
@@ -88,6 +90,14 @@ private:
 	ScopedPointer<Label> masterLabel;
 	ScopedPointer<FifoMonitor> masterMonitor;
 	ScopedPointer<RecordButton> masterRecord;
+	ScopedPointer<Label> engineSelectLabel;
+	ScopedPointer<ComboBox> engineSelectCombo;
+	ScopedPointer<Label> recordEventsLabel;
+	ScopedPointer<RecordButton> eventRecord;
+	ScopedPointer<Label> recordSpikesLabel;
+	ScopedPointer<RecordButton> spikeRecord;
+
+	bool subprocessorsVisible;
 
 	virtual void buttonClicked(Button *button) override;
 

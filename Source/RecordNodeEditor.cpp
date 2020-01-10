@@ -53,6 +53,47 @@ RecordNodeEditor::RecordNodeEditor(RecordNode* parentNode, bool useDefaultParame
 	masterRecord->addListener(this);
 	addAndMakeVisible(masterRecord);
 
+	/*
+	engineSelectLabel = new Label("engineSelect", "ENGINE");
+	engineSelectLabel->setBounds(36, 33, 80, 20);
+	engineSelectLabel->setFont(Font("Small Text", 9.0f, Font::plain));
+	addAndMakeVisible(engineSelectLabel);
+	*/
+
+	engineSelectCombo = new ComboBox("engineSelectCombo");
+	engineSelectCombo->setBounds(42, 46, 93, 20);
+	engineSelectCombo->addItem("Binary", 1);
+	engineSelectCombo->addItem("OpenEphys", 2);
+	engineSelectCombo->setSelectedId(1);
+	addAndMakeVisible(engineSelectCombo);
+
+	recordEventsLabel = new Label("recordEvents", "RECORD EVENTS");
+	recordEventsLabel->setBounds(40, 71, 80, 20);
+	recordEventsLabel->setFont(Font("Small Text", 10.0f, Font::plain));
+	addAndMakeVisible(recordEventsLabel);
+
+	eventRecord = new RecordButton("EventRecord");
+	eventRecord->setBounds(120, 73, 15, 15);
+	eventRecord->addListener(this);
+	addAndMakeVisible(eventRecord);
+
+	recordSpikesLabel = new Label("recordSpikes", "RECORD SPIKES");
+	recordSpikesLabel->setBounds(40, 88, 76, 20);
+	recordSpikesLabel->setFont(Font("Small Text", 10.0f, Font::plain));
+	addAndMakeVisible(recordSpikesLabel);
+
+	spikeRecord = new RecordButton("SpikeRecord");
+	spikeRecord->setBounds(120, 90, 15, 15);
+	spikeRecord->addListener(this);
+	addAndMakeVisible(spikeRecord);
+
+	/*
+	writeSpeedLabel = new Label("writeSpeedLabel", "WRITE SPEED");
+	writeSpeedLabel->setBounds(40, 102, 76, 20);
+	writeSpeedLabel->setFont(Font("Small Text", 10.0f, Font::plain));
+	addAndMakeVisible(writeSpeedLabel);
+	*/
+
 }
 
 RecordNodeEditor::~RecordNodeEditor()
@@ -78,9 +119,9 @@ void RecordNodeEditor::updateSubprocessorFifos()
 		for (int i = 0; i < recordNode->getNumSubProcessors(); i++)
 		{
 
-			subProcLabels.add(new Label("SP"+String(i)));
-			subProcLabels.getLast()->setBounds(8 + i *20, 21, 40, 20);
-			subProcLabels.getLast()->setFont(Font("Small Text", 8.0f, Font::plain));
+			subProcLabels.add(new Label("SP"+String(i), "SP"+String(i)));
+			subProcLabels.getLast()->setBounds(13 + i *20, 24, 40, 20);
+			subProcLabels.getLast()->setFont(Font("Small Text", 7.0f, Font::plain));
 			addAndMakeVisible(subProcLabels.getLast());
 			subProcLabels.getLast()->setVisible(false);
 
@@ -119,66 +160,84 @@ void RecordNodeEditor::buttonClicked(Button *button)
 	
 }
 
-void RecordNodeEditor::showSubprocessorFifos(bool show)
+void RecordNodeEditor::collapsedStateChanged()
 {
 
-	int dX = 20 * (recordNode->getNumSubProcessors()) + 10;
-	if (show)
+	if (getCollapsedState())
 	{
-
-		fifoDrawerButton->setBounds(
-			fifoDrawerButton->getX() + dX, fifoDrawerButton->getY(),
-			fifoDrawerButton->getWidth(), fifoDrawerButton->getHeight());
-
-		masterLabel->setBounds(
-			masterLabel->getX() + dX, masterLabel->getY(),
-			masterLabel->getWidth(), masterLabel->getHeight());
-
-		masterMonitor->setBounds(
-			masterMonitor->getX() + dX, masterMonitor->getY(),
-			masterMonitor->getWidth(), masterMonitor->getHeight());
-
-		masterRecord->setBounds(
-			masterRecord->getX() + dX, masterRecord->getY(),
-			masterRecord->getWidth(), masterRecord->getHeight());
-
-		for (auto spl : subProcLabels)
-			spl->setVisible(true);
-		for (auto spm : subProcMonitors)
-			spm->setVisible(true);
-		for (auto spr : subProcRecords)
-			spr->setVisible(true);
-
-		desiredWidth += dX;
-	}
-	else
-	{
-
-		fifoDrawerButton->setBounds(
-			fifoDrawerButton->getX() - dX, fifoDrawerButton->getY(),
-			fifoDrawerButton->getWidth(), fifoDrawerButton->getHeight());
-
-		masterLabel->setBounds(
-			masterLabel->getX() - dX, masterLabel->getY(),
-			masterLabel->getWidth(), masterLabel->getHeight());
-
-		masterMonitor->setBounds(
-			masterMonitor->getX() - dX, masterMonitor->getY(),
-			masterMonitor->getWidth(), masterMonitor->getHeight());
-
-		masterRecord->setBounds(
-			masterRecord->getX() - dX, masterRecord->getY(),
-			masterRecord->getWidth(), masterRecord->getHeight());
-
 		for (auto spl : subProcLabels)
 			spl->setVisible(false);
 		for (auto spm : subProcMonitors)
 			spm->setVisible(false);
 		for (auto spr : subProcRecords)
 			spr->setVisible(false);
-
-		desiredWidth -= dX;
+	} 
+	else
+	{
+		for (auto spl : subProcLabels)
+			spl->setVisible(subprocessorsVisible);
+		for (auto spm : subProcMonitors)
+			spm->setVisible(subprocessorsVisible);
+		for (auto spr : subProcRecords)
+			spr->setVisible(subprocessorsVisible);
 	}
+	
+	
+}
+
+void RecordNodeEditor::showSubprocessorFifos(bool show)
+{
+
+	subprocessorsVisible = show;
+
+	int dX = 20 * (recordNode->getNumSubProcessors()) + 20;
+	dX = show ? dX : -dX;
+
+	fifoDrawerButton->setBounds(
+		fifoDrawerButton->getX() + dX, fifoDrawerButton->getY(),
+		fifoDrawerButton->getWidth(), fifoDrawerButton->getHeight());
+
+	masterLabel->setBounds(
+		masterLabel->getX() + dX, masterLabel->getY(),
+		masterLabel->getWidth(), masterLabel->getHeight());
+
+	masterMonitor->setBounds(
+		masterMonitor->getX() + dX, masterMonitor->getY(),
+		masterMonitor->getWidth(), masterMonitor->getHeight());
+
+	masterRecord->setBounds(
+		masterRecord->getX() + dX, masterRecord->getY(),
+		masterRecord->getWidth(), masterRecord->getHeight());
+
+	engineSelectCombo->setBounds(
+		engineSelectCombo->getX() + dX, engineSelectCombo->getY(),
+		engineSelectCombo->getWidth(), engineSelectCombo->getHeight());
+
+	recordEventsLabel->setBounds(
+		recordEventsLabel->getX() + dX, recordEventsLabel->getY(),
+		recordEventsLabel->getWidth(), recordEventsLabel->getHeight());
+
+	eventRecord->setBounds(
+		eventRecord->getX() + dX, eventRecord->getY(),
+		eventRecord->getWidth(), eventRecord->getHeight());
+
+	recordSpikesLabel->setBounds(
+		recordSpikesLabel->getX() + dX, recordSpikesLabel->getY(),
+		recordSpikesLabel->getWidth(), recordSpikesLabel->getHeight());
+
+	spikeRecord->setBounds(
+		spikeRecord->getX() + dX, spikeRecord->getY(),
+		spikeRecord->getWidth(), spikeRecord->getHeight());
+
+	for (auto spl : subProcLabels)
+		spl->setVisible(show);
+	for (auto spm : subProcMonitors)
+		spm->setVisible(show);
+	for (auto spr : subProcRecords)
+		spr->setVisible(show);
+
+	desiredWidth += dX;
+
 	CoreServices::updateSignalChain(this);
 }
 
