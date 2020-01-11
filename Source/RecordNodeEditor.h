@@ -65,7 +65,7 @@ private:
 	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown) override;
 };
 
-class RecordNodeEditor : public GenericEditor, public Button::Listener
+class RecordNodeEditor : public GenericEditor
 {
 public:
 
@@ -83,6 +83,8 @@ private:
 
 	RecordNode* recordNode;
 
+	int numSubprocessors;
+
 	ScopedPointer<FifoDrawerButton> fifoDrawerButton;
 	OwnedArray<Label> subProcLabels;
 	OwnedArray<FifoMonitor> subProcMonitors;
@@ -99,7 +101,7 @@ private:
 
 	bool subprocessorsVisible;
 
-	virtual void buttonClicked(Button *button) override;
+	void buttonEvent(Button* button);
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RecordNodeEditor);
 

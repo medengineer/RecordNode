@@ -74,6 +74,9 @@ private:
 	bool hasRecorded;
 	bool settingsNeeded;
 
+	bool recordEvents;
+	bool recordSpikes;
+
 	File dataDirectory;
 	File rootFolder;
 	bool newDirectoryNeeded;

@@ -323,7 +323,7 @@ void RecordNode::stopRecording()
 void RecordNode::handleEvent(const EventChannel* eventInfo, const MidiMessage& event, int samplePosition)
 {
 
-	if (true) //TODO: True only when saving events is enabled for this RecordNode.
+	if (recordEvents) 
 	{
 		int64 timestamp = Event::getTimestamp(event);
 		int eventIndex;

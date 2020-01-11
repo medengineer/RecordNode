@@ -26,8 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "RecordNode.h"
 
 RecordNodeEditor::RecordNodeEditor(RecordNode* parentNode, bool useDefaultParameterEditors = true)
-	: GenericEditor(parentNode, useDefaultParameterEditors)
-
+	: GenericEditor(parentNode, useDefaultParameterEditors),
+	numSubprocessors(0)
 {
 
 	recordNode = parentNode;
@@ -139,7 +139,7 @@ void RecordNodeEditor::updateSubprocessorFifos()
 	} 
 }
 
-void RecordNodeEditor::buttonClicked(Button *button)
+void RecordNodeEditor::buttonEvent(Button *button)
 {
 
 	if (button == masterRecord) 
@@ -155,8 +155,6 @@ void RecordNodeEditor::buttonClicked(Button *button)
 		else
 			showSubprocessorFifos(false);
 	}
-
-	buttonEvent(button);
 	
 }
 
@@ -190,7 +188,10 @@ void RecordNodeEditor::showSubprocessorFifos(bool show)
 
 	subprocessorsVisible = show;
 
-	int dX = 20 * (recordNode->getNumSubProcessors()) + 20;
+	if (show)
+		numSubprocessors = recordNode->getNumSubProcessors();
+
+	int dX = 20 * (numSubprocessors + 1);
 	dX = show ? dX : -dX;
 
 	fifoDrawerButton->setBounds(
@@ -239,6 +240,7 @@ void RecordNodeEditor::showSubprocessorFifos(bool show)
 	desiredWidth += dX;
 
 	CoreServices::updateSignalChain(this);
+
 }
 
 FifoDrawerButton::FifoDrawerButton(const String &name) : DrawerButton(name)
