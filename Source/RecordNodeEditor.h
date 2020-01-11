@@ -38,6 +38,16 @@ private:
 	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown) override;
 };
 
+class ChannelButton : public Button	
+{
+public:
+	ChannelButton(int id);
+	~ChannelButton();
+private:
+	int id; 
+	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown) override;
+};
+
 class FifoMonitor : public Component, public Timer
 {
 public:
@@ -47,7 +57,11 @@ public:
 
 	void timerCallback();
 
+	void mouseDoubleClick(const MouseEvent &event);
+
 private:
+
+	OwnedArray<ChannelButton> channelButtons;
 	void paint(Graphics &g);
 
 	float fillPercentage;

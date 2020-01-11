@@ -243,6 +243,53 @@ void RecordNodeEditor::showSubprocessorFifos(bool show)
 
 }
 
+ChannelButton::ChannelButton(int _id) : Button(String(_id)), id(_id) {}
+ChannelButton::~ChannelButton() {}
+
+void ChannelButton::paintButton(Graphics &g, bool isMouseOver, bool isButtonDown)
+{
+
+	g.setColour(Colour(0,0,0));
+	g.fillRoundedRectangle (0.0f, 0.0f, getWidth(), getHeight(), 0.1*getWidth());
+
+	if (isMouseOver)
+	{
+		if (getToggleState())
+		{
+			g.setColour(Colour(255, 65, 65));
+		}
+		else
+		{
+			g.setColour(Colour(210, 210, 210));
+		}
+	}
+	else
+	{
+		if (getToggleState())
+		{
+			g.setColour(Colour(255, 0, 0));
+		}
+		else
+		{
+			g.setColour(Colour(110, 110, 110));
+		}
+	}
+	g.fillEllipse(1,1,getWidth()-2,getHeight()-2);
+
+
+	//Draw static black circle in center on top 
+	/*
+	g.setColour(Colour(0,0,0));
+	g.fillEllipse(0.35*getWidth(), 0.35*getHeight(), 0.3*getWidth(), 0.3*getHeight());
+	*/
+
+	g.setColour(Colour(255,255,255));
+	g.setFont(9);
+	g.drawText (String(id), 0,0, getWidth(), getHeight(), Justification::centred); 
+
+}
+
+
 FifoDrawerButton::FifoDrawerButton(const String &name) : DrawerButton(name)
 {
 }
@@ -312,6 +359,32 @@ FifoMonitor::FifoMonitor(RecordThread *thread_) : thread(thread_), fillPercentag
 	startTimer(500);
 }
 
+void FifoMonitor::mouseDoubleClick(const MouseEvent &event)
+{
+
+    auto* channelSelector = new Component("test");
+
+	/* Create a box of 16 x 24 channels */
+
+	for (int i = 0; i < 16; i++)
+	{
+		for (int j = 0; j < 24; j++)
+		{
+			channelButtons.add(new ChannelButton(24*i+j));
+			channelButtons.getLast()->setBounds(20*j, 20*i, 20, 20);
+			//channelButtons.getLast()->addListener(this);
+			channelSelector->addChildAndSetID(channelButtons.getLast(), String(i));
+		}
+	
+	}
+	channelSelector->setSize (24*20,16*20);
+	channelSelector->setColour(ColourSelector::backgroundColourId, Colours::transparentBlack);
+ 
+    CallOutBox& myBox
+        = CallOutBox::launchAsynchronously (channelSelector, getScreenBounds(), nullptr);
+
+}
+ 
 void FifoMonitor::timerCallback()
 {
 	
