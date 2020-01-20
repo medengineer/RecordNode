@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef __RECORDNODEEDITOR_H__
 #define __RECORDNODEEDITOR_H__
 
-#include <EditorHeaders.h>
+#include "RecordChannelSelector.h"
 
 class RecordThread;
 class RecordNode;
@@ -35,16 +35,6 @@ public:
 	FifoDrawerButton(const String& name);
 	~FifoDrawerButton();
 private:
-	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown) override;
-};
-
-class ChannelButton : public Button	
-{
-public:
-	ChannelButton(int id);
-	~ChannelButton();
-private:
-	int id; 
 	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown) override;
 };
 
