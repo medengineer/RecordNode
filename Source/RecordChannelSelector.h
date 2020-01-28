@@ -1,15 +1,22 @@
 #include <EditorHeaders.h>
 
+class RecordChannelSelector;
+
 enum Select { ALL, NONE, RANGE };
 
 class ChannelButton : public Button	
 {
 public:
-	ChannelButton(int id);
+	ChannelButton(int id, RecordChannelSelector* parent);
 	~ChannelButton();
     int getId() { return id; };
 private:
+	void mouseDown(const MouseEvent &event);
+	void mouseDrag(const MouseEvent &event);
+	void mouseUp(const MouseEvent &event);
+
 	int id; 
+	RecordChannelSelector* parent;
     int width;
     int height;
 	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown) override;
@@ -27,7 +34,7 @@ private:
 class RangeEditor : public TextEditor
 {
 public:
-	RangeEditor(const String& name);
+	RangeEditor(const String& name, const Font& font);
 	~RangeEditor();
 private:
 	//TODO:
@@ -38,10 +45,22 @@ class RecordChannelSelector : public Component, public Button::Listener, public 
 public:
 	RecordChannelSelector(int nChannels);
 	~RecordChannelSelector();
+
+	void mouseMove(const MouseEvent &event);
+	void mouseDown(const MouseEvent &event);
+	void mouseDrag(const MouseEvent &event);
+	void mouseUp(const MouseEvent &event);
+	void buttonClicked(Button *);
+	void modifierKeysChanged(const ModifierKeys& modifiers);
+
+	bool isDragging;
+	Point<int> startDragCoords;
+	bool firstButtonSelectedState;
+
 private:
 	int convertStringToInteger(String s);
 	Array<int> parseStringIntoRange(int rangeValue);
-	void buttonClicked(Button *);
+
 	void textEditorReturnKeyPressed(TextEditor &);
 	void updateRangeString();
 	void parseRangeString();
@@ -52,5 +71,9 @@ private:
 	int nChannels;
 	String rangeString;
 	Array<int> channelStates;
+	bool mouseDragged;
+	Rectangle<int> dragBox;
+	Array<int> selectedButtons;
+	bool shiftKeyDown;
     
 };

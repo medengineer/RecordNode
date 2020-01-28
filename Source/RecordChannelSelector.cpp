@@ -2,19 +2,37 @@
 #include <string>
 #include <vector>
 
-ChannelButton::ChannelButton(int _id) : Button(String(_id)), id(_id) {
+ChannelButton::ChannelButton(int _id, RecordChannelSelector* _parent) : Button(String(_id)), id(_id), parent(_parent) {
     setClickingTogglesState(true);
 }
 
 ChannelButton::~ChannelButton() {}
 
+void ChannelButton::mouseDown(const MouseEvent &event)
+{
+    parent->startDragCoords.setX(event.x + this->getX());
+    parent->startDragCoords.setY(event.y + this->getY());
+    parent->firstButtonSelectedState = !this->getToggleState();
+    parent->mouseDown(event);
+}
+
+void ChannelButton::mouseDrag(const MouseEvent &event)
+{
+    parent->mouseDrag(event);
+}
+
+void ChannelButton::mouseUp(const MouseEvent &event)
+{
+    parent->mouseUp(event);
+}
+
 void ChannelButton::paintButton(Graphics &g, bool isMouseOver, bool isButtonDown)
 {
 
 	g.setColour(Colour(0,0,0));
-	g.fillRoundedRectangle (0.0f, 0.0f, getWidth(), getHeight(), 0.1*getWidth());
+    g.fillEllipse(0.0f, 0.0f, getWidth(), getHeight());
 
-	if (isMouseOver)
+    if (isMouseOver)
 	{
 		if (getToggleState())
 			g.setColour(Colour(255, 65, 65));
@@ -66,9 +84,9 @@ void SelectButton::paintButton(Graphics &g, bool isMouseOver, bool isButtonDown)
 	g.drawText (String(getName()), 0, 0, getWidth(), getHeight(), Justification::centred);
 }
 
-RangeEditor::RangeEditor(const String& name) : TextEditor(name)
+RangeEditor::RangeEditor(const String& name, const Font& font) : TextEditor(name)
 {
-
+    setFont(font);
 }
 
 RangeEditor::~RangeEditor() {}
@@ -77,12 +95,18 @@ RangeEditor::~RangeEditor() {}
  * RECORD CHANNEL SELECTOR
 ***************************/
 
-RecordChannelSelector::RecordChannelSelector(int nChannels) : Component(), nChannels(nChannels)
+RecordChannelSelector::RecordChannelSelector(int nChannels) 
+    : Component(), 
+    nChannels(nChannels),
+    mouseDragged(false), 
+    startDragCoords(0,0),
+    shiftKeyDown(false)
 {
+
+    int width = 368;
 
     int nColumns = 16;
     int nRows = nChannels / nColumns + (int)(!(nChannels % nColumns == 0));
-    int width = 480;
     int buttonSize = width / 16;
     int height = buttonSize * nRows;
 
@@ -92,7 +116,7 @@ RecordChannelSelector::RecordChannelSelector(int nChannels) : Component(), nChan
 		{
             if (nColumns*i+j < nChannels)
             {
-                channelButtons.add(new ChannelButton(nColumns*i+j+1));
+                channelButtons.add(new ChannelButton(nColumns*i+j+1, this));
                 channelButtons.getLast()->setBounds(width/nColumns*j, height/nRows*i, buttonSize, buttonSize);
                 channelButtons.getLast()->addListener(this);
                 addChildAndSetID(channelButtons.getLast(), String(nColumns*i+j+1));
@@ -123,8 +147,8 @@ RecordChannelSelector::RecordChannelSelector(int nChannels) : Component(), nChan
         addChildAndSetID(selectButtons.getLast(),"ALL");
 
         //Add Range Editor
-        
-        rangeEditor = new RangeEditor("Range");
+
+        rangeEditor = new RangeEditor("Range", Font("Small Text", 12, Font::plain));
         rangeEditor->setBounds(0.75*width, height, 0.25*width, width / nColumns);
         rangeEditor->addListener(this);
         addChildAndSetID(rangeEditor,"RANGE_EDITOR");
@@ -141,15 +165,88 @@ RecordChannelSelector::RecordChannelSelector(int nChannels) : Component(), nChan
 
 RecordChannelSelector::~RecordChannelSelector() {}
 
+void RecordChannelSelector::mouseMove(const MouseEvent &event)
+{
+
+};
+void RecordChannelSelector::mouseDown(const MouseEvent &event)
+{
+    selectedButtons.clear();
+};
+
+void RecordChannelSelector::mouseDrag(const MouseEvent &event)
+{
+
+    mouseDragged = true;
+
+    int w = event.getDistanceFromDragStartX();
+    int h = event.getDistanceFromDragStartY();
+    int x = startDragCoords.getX();
+    int y = startDragCoords.getY();
+
+    if (w < 0)
+    {
+        x = x + w;
+        w = -w;
+    }
+
+    if (h < 0)
+    {
+        y = y + h;
+        h = -h;
+    }
+
+    dragBox.setBounds(x, y, w > 0 ? w : 1, h > 0 ? h : 1);
+
+    for (auto button : channelButtons)
+    {
+        if (button->getBounds().intersects(dragBox) && !selectedButtons.contains(button->getId()))
+        {
+            selectedButtons.add(button->getId());
+
+            if (shiftKeyDown) //toggle
+                button->triggerClick();
+            else //Use state of the first selected button
+            {
+                button->setToggleState(firstButtonSelectedState, NotificationType::dontSendNotification);
+            }
+            
+        }
+    }
+    
+};
+
+void RecordChannelSelector::modifierKeysChanged(const ModifierKeys &modifiers)
+{
+    shiftKeyDown = modifiers.isShiftDown();
+}
+
+void RecordChannelSelector::mouseUp(const MouseEvent &event)
+{
+
+    if (!mouseDragged)
+    {
+        for (auto button : channelButtons)
+        {
+            if (button->getBounds().contains(startDragCoords))
+            {
+                button->triggerClick();
+                break;
+            }
+        }
+    }
+    mouseDragged = false;
+}
+
 void RecordChannelSelector::textEditorReturnKeyPressed(TextEditor& editor)
 {
-    channelStates = parseStringIntoRange(9);
+    channelStates = parseStringIntoRange(384);
 
     if (channelStates.size() < 3)
         return;
 
-    for (int i = 0; i < nChannels; i++)
-        channelButtons[i++]->setToggleState(false, NotificationType::dontSendNotification);
+    for (auto* btn : channelButtons)
+        btn->setToggleState(false, NotificationType::dontSendNotification);
 
     int i = 0;
     while (i <= channelStates.size() - 3)
@@ -163,22 +260,14 @@ void RecordChannelSelector::textEditorReturnKeyPressed(TextEditor& editor)
         i+=3;
     }
 
-    /*
-    parseStringIntoRange returns an array of size N where N/3 is the number of ranges to set.
-    Each range "tuple" is represented by (startIdx, endIndex, step)
-    */
-
     for (auto val : channelStates)
     {
         std::cout << val << ",";
     }
     std::cout << std::endl;
 
-    i = 0;
-    while (i < nChannels)
-    {
-        channelButtons[i++]->setToggleState(false, NotificationType::dontSendNotification);
-    }
+    for (auto* btn : channelButtons)
+        btn->setToggleState(false, NotificationType::dontSendNotification);
 
     for (i = 0; i < channelStates.size(); i += 3)
     {
@@ -199,49 +288,32 @@ void RecordChannelSelector::textEditorReturnKeyPressed(TextEditor& editor)
 void RecordChannelSelector::buttonClicked(Button* button)
 {
     
-    for (auto* button : selectButtons)
-    {
-        button->setToggleState(false, NotificationType::dontSendNotification);
-    }
+    for (auto* btn : selectButtons)
+        btn->setToggleState(false, NotificationType::dontSendNotification);
     
     if (button->getButtonText() == String("ALL"))
     {
-        std::cout << "Select all channels" << std::endl;
-        int i = 0;
-        while (i < nChannels)
-        {
-            channelButtons[i++]->setToggleState(true, NotificationType::dontSendNotification);
-        }
-        rangeString = "[" + String(1) + ":" + String(nChannels) + "]";
-        
+        for (auto* btn : channelButtons)
+            btn->setToggleState(true, NotificationType::dontSendNotification);
         button->setToggleState(true, NotificationType::dontSendNotification);
         
     }
     else if (button->getButtonText() == String("NONE"))
     {
-        std::cout << "Select no channels" << std::endl;
-        int i = 0;
-        while (i < nChannels)
-        {
-            channelButtons[i++]->setToggleState(false, NotificationType::dontSendNotification);
-        }
-        rangeString = "[]";
-        
+        for (auto* btn : channelButtons)
+            btn->setToggleState(false, NotificationType::dontSendNotification);
         button->setToggleState(true, NotificationType::dontSendNotification);
     }
     else if (button->getButtonText() == String("RANGE:"))
     {
-        std::cout << "Set custom range of channels" << std::endl;
         button->setToggleState(true, NotificationType::dontSendNotification);
     }
     else //channel button was manually selected
     {
-        selectButtons.getLast()->setToggleState(true, NotificationType::dontSendNotification);
-        int channel = ((ChannelButton*)button)->getId();
-        updateRangeString();
+        //TODO: Update text box with range string
     }
     
-    rangeEditor->setText(rangeString);
+    //rangeEditor->setText(rangeString);
     
 }
 
@@ -325,6 +397,7 @@ Array<int> RecordChannelSelector::parseStringIntoRange(int rangeValue)
 {
     String s = ",";
     s += rangeEditor->getText();
+
     Array<int> finalList, separator, rangeseparator;
     int i, j, a, b, k, openb, closeb, otherchar, x, y;
     s += ",";

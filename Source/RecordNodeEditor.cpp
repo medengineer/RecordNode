@@ -309,7 +309,7 @@ void FifoMonitor::mouseDoubleClick(const MouseEvent &event)
 {
 
     // thread->recordNode->getNumInputs()
-    auto* channelSelector = new RecordChannelSelector(9);
+    auto* channelSelector = new RecordChannelSelector(384);
  
     CallOutBox& myBox
         = CallOutBox::launchAsynchronously (channelSelector, getScreenBounds(), nullptr);
