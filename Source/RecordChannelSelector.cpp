@@ -95,15 +95,17 @@ RangeEditor::~RangeEditor() {}
  * RECORD CHANNEL SELECTOR
 ***************************/
 
-RecordChannelSelector::RecordChannelSelector(int nChannels) 
+RecordChannelSelector::RecordChannelSelector(std::vector<bool> channelStates) 
     : Component(), 
-    nChannels(nChannels),
+    nChannels(channelStates.size()),
     mouseDragged(false), 
     startDragCoords(0,0),
-    shiftKeyDown(false)
+    shiftKeyDown(false),
+    firstButtonSelectedState(false),
+    isDragging(false)
 {
 
-    int width = 368;
+    int width = 368; //can use any multiples of 16 here for dynamic resizing
 
     int nColumns = 16;
     int nRows = nChannels / nColumns + (int)(!(nChannels % nColumns == 0));
@@ -118,6 +120,7 @@ RecordChannelSelector::RecordChannelSelector(int nChannels)
             {
                 channelButtons.add(new ChannelButton(nColumns*i+j+1, this));
                 channelButtons.getLast()->setBounds(width/nColumns*j, height/nRows*i, buttonSize, buttonSize);
+                channelButtons.getLast()->setToggleState(channelStates[nColumns * i + j], NotificationType::dontSendNotification);
                 channelButtons.getLast()->addListener(this);
                 addChildAndSetID(channelButtons.getLast(), String(nColumns*i+j+1));
             }

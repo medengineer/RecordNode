@@ -29,8 +29,6 @@ RecordNode::RecordNode()
 	recordThread = new RecordThread(this, recordEngine);
 	recordThread->setQueuePointers(dataQueue, eventQueue, spikeQueue);
 
-	updateSubprocessors();
-
 }
 
 RecordNode::~RecordNode()
@@ -170,21 +168,25 @@ void RecordNode::setParameter(int parameterIndex, float newValue)
 
 }
 
-void RecordNode::updateSubprocessors()
+void RecordNode::updateChannelStates(int subProcIdx, std::vector<bool> channelStates)
 {
+	this->channelStates[subProcIdx] = channelStates;
+}
+
+void RecordNode::updateSubprocessorMap()
+{
+	
 	subProcessorMap.clear();
-	int subProcIdx = -1;
+	int subProcIdx = 0;
 	std::vector<int> subProcChannels;
 
 	for (int ch = 0; ch < dataChannelArray.size(); ch++)
 	{
 		DataChannel *chan = dataChannelArray[ch];
-		chan->setRecordState(true);
 		if (chan->getSubProcessorIdx() > subProcIdx)
 		{
 			subProcIdx = chan->getSubProcessorIdx();
-			if (subProcChannels.size())
-				subProcessorMap.push_back(subProcChannels);
+			subProcessorMap.push_back(subProcChannels);
 			subProcChannels = {ch};
 		}
 		else
@@ -193,7 +195,7 @@ void RecordNode::updateSubprocessors()
 		}
 	}
 	subProcessorMap.push_back(subProcChannels);
-	subProcessorChannelCount = subProcChannels.size();
+
 }
 
 int RecordNode::getNumSubProcessors() const
@@ -203,7 +205,11 @@ int RecordNode::getNumSubProcessors() const
 
 void RecordNode::updateSettings()
 {
-	updateSubprocessors();
+	updateSubprocessorMap();
+
+	while (channelStates.size() < subProcessorMap.size())
+		channelStates.push_back(std::vector<bool>(subProcessorMap[0].size(), false));
+
 }
 
 void RecordNode::startRecording()
@@ -256,7 +262,7 @@ void RecordNode::startRecording()
 	{
 		DataChannel* chan = dataChannelArray[ch];
 
-		if (chan->getRecordState())
+		if (channelStates[chan->getSubProcessorIdx()][ch % channelStates[0].size()])
 		{
 			channelMap.add(ch);
 			if (chan->getSubProcessorIdx() > lastSubProcessor)

@@ -37,7 +37,8 @@ public:
 	AudioProcessorEditor* createEditor() override;
 	bool hasEditor() const override { return true; }
 
-	void updateSubprocessors();
+	
+	void updateSubprocessorMap();
 
 	void updateSettings() override;
 	int getNumSubProcessors() const override;
@@ -50,6 +51,8 @@ public:
 	String generateDateString() const;
 	int getExperimentNumber() const;
 	int getRecordingNumber() const;
+
+	void updateChannelStates(int subProcIdx, std::vector<bool> enabled);
 
 	bool isFirstChannelInRecordedSubprocessor(int channel);
 
@@ -67,6 +70,11 @@ public:
 
 	/** Get the last settings.xml in string form. Since the string will be large, returns a const ref.*/
 	const String &getLastSettingsXml() const;
+
+	Array<int> channelMap; //Map from record channel index to source channel index
+	std::vector<std::vector<int>> subProcessorMap;
+	std::vector<std::vector<bool>> channelStates;
+	std::vector<int> startRecChannels;
 
 private:
 
@@ -90,11 +98,6 @@ private:
 	ScopedPointer<DataQueue> dataQueue;
 	ScopedPointer<EventMsgQueue> eventQueue;
 	ScopedPointer<SpikeMsgQueue> spikeQueue;
-
-	Array<int> channelMap; //Map from record channel index to source channel index
-	std::vector<std::vector<int>> subProcessorMap;
-	int subProcessorChannelCount;
-	std::vector<int> startRecChannels;
 
 	Array<bool> validBlocks;
 	std::atomic<bool> setFirstBlock;

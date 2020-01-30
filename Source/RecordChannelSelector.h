@@ -43,7 +43,7 @@ private:
 class RecordChannelSelector : public Component, public Button::Listener, public TextEditor::Listener
 {
 public:
-	RecordChannelSelector(int nChannels);
+	RecordChannelSelector(std::vector<bool> channelStates);
 	~RecordChannelSelector();
 
 	void mouseMove(const MouseEvent &event);
@@ -57,6 +57,10 @@ public:
 	Point<int> startDragCoords;
 	bool firstButtonSelectedState;
 
+	int nChannels;
+
+	OwnedArray<ChannelButton> channelButtons;
+
 private:
 	int convertStringToInteger(String s);
 	Array<int> parseStringIntoRange(int rangeValue);
@@ -64,11 +68,9 @@ private:
 	void textEditorReturnKeyPressed(TextEditor &);
 	void updateRangeString();
 	void parseRangeString();
-	OwnedArray<ChannelButton> channelButtons;
 	OwnedArray<SelectButton> selectButtons;
 	ScopedPointer<RangeEditor> rangeEditor;
 
-	int nChannels;
 	String rangeString;
 	Array<int> channelStates;
 	bool mouseDragged;

@@ -38,10 +38,10 @@ private:
 	void paintButton(Graphics& g, bool isMouseOver, bool isButtonDown) override;
 };
 
-class FifoMonitor : public Component, public Timer
+class FifoMonitor : public Component, public Timer, public ComponentListener
 {
 public:
-	FifoMonitor(RecordThread *thread);
+	FifoMonitor(RecordNode*, int);
 
 	void setFillPercentage(float percentage);
 
@@ -49,15 +49,19 @@ public:
 
 	void mouseDoubleClick(const MouseEvent &event);
 
-private:
+	void componentBeingDeleted(Component &component);
+
+private :
 
 	OwnedArray<ChannelButton> channelButtons;
+	std::vector<bool> channelStates;
 	void paint(Graphics &g);
 
 	float fillPercentage;
-	RecordThread *thread;
+	RecordNode *recordNode;
 	int id;
 	Random random;
+	
 };
 
 class RecordButton : public Button

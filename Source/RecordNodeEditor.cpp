@@ -44,7 +44,7 @@ RecordNodeEditor::RecordNodeEditor(RecordNode* parentNode, bool useDefaultParame
 	masterLabel->setFont(Font("Small Text", 8.0f, Font::plain));
 	addAndMakeVisible(masterLabel);
 
-	masterMonitor = new FifoMonitor(recordNode->recordThread);
+	masterMonitor = new FifoMonitor(recordNode, -1);
 	masterMonitor->setBounds(18, 43, 15, 62);
 	addAndMakeVisible(masterMonitor);
 
@@ -119,7 +119,7 @@ void RecordNodeEditor::updateSubprocessorFifos()
 			addAndMakeVisible(subProcLabels.getLast());
 			subProcLabels.getLast()->setVisible(false);
 
-			subProcMonitors.add(new FifoMonitor(recordNode->recordThread));
+			subProcMonitors.add(new FifoMonitor(recordNode, i));
 			subProcMonitors.getLast()->setBounds(18 + i * 20, 43, 15, 62);
 			addAndMakeVisible(subProcMonitors.getLast());
 			subProcMonitors.getLast()->setVisible(false);
@@ -300,26 +300,48 @@ void RecordButton::paintButton(Graphics &g, bool isMouseOver, bool isButtonDown)
 
 }
 
-FifoMonitor::FifoMonitor(RecordThread *thread_) : thread(thread_), fillPercentage(0.0)
+FifoMonitor::FifoMonitor(RecordNode* node, int id) : recordNode(node), id(id), fillPercentage(0.0)
 {
+
 	startTimer(500);
 }
 
 void FifoMonitor::mouseDoubleClick(const MouseEvent &event)
 {
 
-    // thread->recordNode->getNumInputs()
-    auto* channelSelector = new RecordChannelSelector(384);
+	if (id < 0) //TODO: Master box was selected; show read-only channel selector
+		return;
+
+	channelStates = recordNode->channelStates[id];
+	
+    auto* channelSelector = new RecordChannelSelector(channelStates);
  
     CallOutBox& myBox
         = CallOutBox::launchAsynchronously (channelSelector, getScreenBounds(), nullptr);
 
+
+	myBox.addComponentListener(this);
+
 }
- 
+void FifoMonitor::componentBeingDeleted(Component &component)
+{
+	/*Capture button channel states and send back to record node. */
+
+	auto* channelSelector = (RecordChannelSelector*)component.getChildComponent(0);
+
+	channelStates.clear();
+	for (auto* btn : channelSelector->channelButtons)
+		channelStates.push_back(btn->getToggleState());
+
+	recordNode->updateChannelStates(id, channelStates);
+
+	component.removeComponentListener(this);
+}
+
 void FifoMonitor::timerCallback()
 {
 	
-	if (thread->isThreadRunning())
+	if (recordNode->recordThread->isThreadRunning())
 	{
 		setFillPercentage(0.5f);
 	}
