@@ -238,7 +238,8 @@ void RecordNodeEditor::showSubprocessorFifos(bool show)
 
 	desiredWidth += dX;
 
-	CoreServices::updateSignalChain(this);
+	CoreServices::highlightEditor(this);
+	deselect();
 
 }
 
