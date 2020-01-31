@@ -316,7 +316,6 @@ void RecordNode::startRecording()
 void RecordNode::stopRecording()
 {
 
-	LOGD(__FUNCTION__);
 	isRecording = false;
 	if (recordThread->isThreadRunning())
 	{
@@ -324,6 +323,11 @@ void RecordNode::stopRecording()
 		recordThread->waitForThreadToExit(200); //2000
 	}
 
+}
+
+void RecordNode::setRecordEvents(bool recordEvents)
+{
+	this->recordEvents = recordEvents;
 }
 
 void RecordNode::handleEvent(const EventChannel* eventInfo, const MidiMessage& event, int samplePosition)

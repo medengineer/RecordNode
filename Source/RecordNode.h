@@ -62,6 +62,8 @@ public:
 
 	void setParameter(int parameterIndex, float newValue) override;
 
+	void setRecordEvents(bool);
+
 	ScopedPointer<RecordThread> recordThread;
 	ScopedPointer<RecordEngine> recordEngine;
 

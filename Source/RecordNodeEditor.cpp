@@ -140,6 +140,11 @@ void RecordNodeEditor::buttonEvent(Button *button)
 	{
 
 	}
+	else if (button == eventRecord)
+	{
+		recordNode->setRecordEvents(button->getToggleState());
+
+	}
 	else if (button == fifoDrawerButton)
 	{
 
