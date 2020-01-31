@@ -30,7 +30,7 @@ void ChannelButton::paintButton(Graphics &g, bool isMouseOver, bool isButtonDown
 {
 
 	g.setColour(Colour(0,0,0));
-    g.fillEllipse(0.0f, 0.0f, getWidth(), getHeight());
+    g.fillRoundedRectangle(0.0f, 0.0f, getWidth(), getHeight(), 0.001*getWidth());
 
     if (isMouseOver)
 	{
@@ -46,7 +46,7 @@ void ChannelButton::paintButton(Graphics &g, bool isMouseOver, bool isButtonDown
 		else
 			g.setColour(Colour(110, 110, 110));
 	}
-	g.fillEllipse(1,1,getWidth()-2,getHeight()-2);
+	g.fillRoundedRectangle(1,1,getWidth()-2,getHeight()-2,0.001*getWidth());
 
     //Draw text string in middle of button
 	g.setColour(Colour(255,255,255));
