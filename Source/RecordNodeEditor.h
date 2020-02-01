@@ -51,10 +51,11 @@ public:
 
 	void componentBeingDeleted(Component &component);
 
+	std::vector<bool> channelStates;
+
 private :
 
 	OwnedArray<ChannelButton> channelButtons;
-	std::vector<bool> channelStates;
 	void paint(Graphics &g);
 
 	float fillPercentage;

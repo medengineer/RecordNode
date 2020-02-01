@@ -410,8 +410,3 @@ bool RecordNode::isFirstChannelInRecordedSubprocessor(int ch)
 {
 	return std::find(startRecChannels.begin(), startRecChannels.end(), ch) != startRecChannels.end();
 }
-
-
-
-
-
