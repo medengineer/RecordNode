@@ -35,6 +35,11 @@ RecordNode::~RecordNode()
 {
 }
 
+void RecordNode::addEngine(RecordEngineManager* rem)
+{
+	recordEngines.add(rem);
+}
+
 String RecordNode::generateDirectoryName()
 {
 	Time calendar = Time::getCurrentTime();

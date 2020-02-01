@@ -37,7 +37,8 @@ public:
 	AudioProcessorEditor* createEditor() override;
 	bool hasEditor() const override { return true; }
 
-	
+	void addEngine(RecordEngineManager* rem);
+
 	void updateSubprocessorMap();
 
 	void updateSettings() override;
@@ -78,9 +79,11 @@ public:
 	std::vector<std::vector<bool>> channelStates;
 	std::vector<int> startRecChannels;
 
-private:
+	OwnedArray<RecordEngineManager> recordEngines;
 
-	bool isRecording;
+		private :
+
+		bool isRecording;
 	bool hasRecorded;
 	bool settingsNeeded;
 

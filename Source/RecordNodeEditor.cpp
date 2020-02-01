@@ -62,8 +62,24 @@ RecordNodeEditor::RecordNodeEditor(RecordNode* parentNode, bool useDefaultParame
 
 	engineSelectCombo = new ComboBox("engineSelectCombo");
 	engineSelectCombo->setBounds(42, 46, 93, 20);
-	engineSelectCombo->addItem("Binary", 1);
-	engineSelectCombo->addItem("OpenEphys", 2);
+
+	std::cout << "Found " << RecordEngineManager::getNumOfBuiltInEngines() << " engines" << std::endl;
+	for (int i = 0; i < RecordEngineManager::getNumOfBuiltInEngines(); i++)
+	{
+		RecordEngineManager *rem = RecordEngineManager::createBuiltInEngineManager(i);
+		engineSelectCombo->addItem(rem->getName(), i+1);
+		std::cout << "Adding " << rem->getName() << std::endl;
+		recordNode->addEngine(rem);
+	}
+
+	for (int i = 0; i < AccessClass::getPluginManager()->getNumRecordEngines(); i++)
+	{
+		Plugin::RecordEngineInfo info;
+		info = AccessClass::getPluginManager()->getRecordEngineInfo(i);
+		recordSelector->addItem(info.name, id++);
+		recordEngines.add(info.creator());
+	}
+	
 	engineSelectCombo->setSelectedId(1);
 	addAndMakeVisible(engineSelectCombo);
 
