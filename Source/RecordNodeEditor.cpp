@@ -153,6 +153,17 @@ void RecordNodeEditor::buttonEvent(Button *button)
 			showSubprocessorFifos(true);
 		else
 			showSubprocessorFifos(false);
+	} 
+	else if (subProcRecords.contains((RecordButton*)button))
+	{
+
+		int subProcIdx = subProcRecords.indexOf((RecordButton *)button);
+		FifoMonitor* fifo = subProcMonitors[subProcIdx];
+		bool enabled = button->getToggleState();
+		fifo->channelStates.clear();
+		for (int i = 0; i < recordNode->channelStates[subProcIdx].size(); i++)
+			fifo->channelStates.push_back(enabled);
+		recordNode->updateChannelStates(subProcIdx, fifo->channelStates);
 	}
 	
 }
@@ -253,10 +264,9 @@ FifoDrawerButton::~FifoDrawerButton()
 
 void FifoDrawerButton::paintButton(Graphics &g, bool isMouseOver, bool isButtonDown)
 {
+	g.setColour(Colour(110, 110, 110));
 	if (isMouseOver)
 		g.setColour(Colour(210, 210, 210));
-	else
-		g.setColour(Colour(110, 110, 110));
 
 	g.drawVerticalLine(3, 0.0f, getHeight());
 	g.drawVerticalLine(5, 0.0f, getHeight());
@@ -273,32 +283,21 @@ void RecordButton::paintButton(Graphics &g, bool isMouseOver, bool isButtonDown)
 {
 
 	g.setColour(Colour(0,0,0));
-	g.fillEllipse(0,0,getWidth(),getHeight());
+	g.fillRoundedRectangle(0,0,getWidth(),getHeight(),0.2*getWidth());
 
 	if (isMouseOver)
 	{
+		g.setColour(Colour(210, 210, 210));
 		if (getToggleState())
-		{
 			g.setColour(Colour(255, 65, 65));
-		}
-		else
-		{
-			g.setColour(Colour(210, 210, 210));
-		}
 	}
 	else
 	{
+		g.setColour(Colour(110, 110, 110));
 		if (getToggleState())
-		{
 			g.setColour(Colour(255, 0, 0));
-		}
-		else
-		{
-			g.setColour(Colour(110, 110, 110));
-		}
 	}
-	g.fillEllipse(1,1,getWidth()-2,getHeight()-2);
-
+	g.fillRoundedRectangle(1, 1, getWidth() - 2, getHeight() - 2, 0.2 * getWidth());
 
 	/*Draw static black circle in center on top */
 	g.setColour(Colour(0,0,0));
@@ -349,16 +348,13 @@ void FifoMonitor::timerCallback()
 	
 	if (recordNode->recordThread->isThreadRunning())
 	{
-		setFillPercentage(0.5f);
+		//TODO: Get metric from recordThread
+		setFillPercentage(0.0f);
 	}
 	else 
 	{
-		setFillPercentage(random.nextFloat());
+		setFillPercentage(0.0f);
 	}
-
-	//JFF: Generate a random # between 0-1 and
-	
-
 
 }
 
