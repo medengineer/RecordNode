@@ -27,7 +27,6 @@ RecordNode::RecordNode()
 	recordEngine->resetChannels();
 
 	recordThread = new RecordThread(this, recordEngine);
-	recordThread->setQueuePointers(dataQueue, eventQueue, spikeQueue);
 
 }
 
@@ -216,35 +215,6 @@ void RecordNode::startRecording()
 {
 
 	updateSettings(); 
-	
-	/* Got signal from plugin-GUI to start recording */
-	if (newDirectoryNeeded)
-	{
-		createNewDirectory();
-		recordingNumber = 0;
-		experimentNumber = 1;
-		settingsNeeded = true;
-		recordEngine->directoryChanged();
-	}
-	else
-	{
-		recordingNumber++; // increment recording number within this directory
-	}
-
-	if (!rootFolder.exists())
-	{
-		rootFolder.createDirectory();
-	}
-	/* TODO: Do we still need this? 
-	if (settingsNeeded)
-	{
-		String settingsFileName = rootFolder.getFullPathName() + File::separator + "settings" + ((experimentNumber > 1) ? "_" + String(experimentNumber) : String::empty) + ".xml";
-		AccessClass::getEditorViewport()->saveState(File(settingsFileName), m_lastSettingsText);
-		settingsNeeded = false;
-	}
-	*/
-
-	recordThread->setFileComponents(rootFolder, recordingNumber, experimentNumber);
 
 	channelMap.clear();
 	int totChans = dataChannelArray.size();
@@ -299,17 +269,53 @@ void RecordNode::startRecording()
 	dataQueue->setChannels(numRecordedChannels);
 	eventQueue->reset();
 	spikeQueue->reset();
+	recordThread->setQueuePointers(dataQueue, eventQueue, spikeQueue);
 	recordThread->setFirstBlockFlag(false);
 
-	isRecording = true;
 	hasRecorded = true;
 
 	/* Set write properties */
 	setFirstBlock = false;
 
 	/* Start record thread */
-	recordThread->startThread();
-	isRecording = true;
+	if (channelMap.size())
+	{
+
+		/* Got signal from plugin-GUI to start recording */
+		if (newDirectoryNeeded)
+		{
+			createNewDirectory();
+			recordingNumber = 0;
+			experimentNumber = 1;
+			settingsNeeded = true;
+			recordEngine->directoryChanged();
+		}
+		else
+		{
+			recordingNumber++; // increment recording number within this directory
+		}
+
+		if (!rootFolder.exists())
+		{
+			rootFolder.createDirectory();
+		}
+		
+		//TODO:
+		/*
+		if (settingsNeeded)
+		{
+			String settingsFileName = rootFolder.getFullPathName() + File::separator + "settings" + ((experimentNumber > 1) ? "_" + String(experimentNumber) : String::empty) + ".xml";
+			AccessClass::getEditorViewport()->saveState(File(settingsFileName), m_lastSettingsText);
+			settingsNeeded = false;
+		}
+		*/
+
+		recordThread->setFileComponents(rootFolder, recordingNumber, experimentNumber);
+		recordThread->startThread();
+		isRecording = true;
+	}
+	else
+		isRecording = false;
 
 }
 
@@ -355,10 +361,10 @@ void RecordNode::handleTimestampSyncTexts(const MidiMessage& event)
 void RecordNode::process(AudioSampleBuffer& buffer)
 {
 
-	checkForEvents();
-
 	if (isRecording)
 	{
+
+		checkForEvents();
 
 		for (int ch = 0; ch < channelMap.size(); ch++)
 		{
