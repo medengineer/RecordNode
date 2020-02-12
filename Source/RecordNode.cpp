@@ -23,8 +23,6 @@ RecordNode::RecordNode()
 	spikeQueue = new SpikeMsgQueue(SPIKE_BUFFER_NSPIKES);
 
 	recordEngine = new BinaryRecording();
-	recordEngine->registerRecordNode(this);
-	recordEngine->resetChannels();
 
 	recordThread = new RecordThread(this, recordEngine);
 
@@ -263,6 +261,9 @@ void RecordNode::startRecording()
 	validBlocks.insertMultiple(0, false, getNumInputs());
 
 	//WARNING: If at some point we record at more that one recordEngine at once, we should change this, as using OwnedArrays only works for the first
+
+	recordEngine->registerRecordNode(this);
+	recordEngine->resetChannels();
 	recordEngine->setChannelMapping(channelMap, chanProcessorMap, chanOrderinProc, procInfo);
 	recordThread->setChannelMap(channelMap);
 
@@ -310,7 +311,7 @@ void RecordNode::startRecording()
 		}
 		*/
 
-		recordThread->setFileComponents(rootFolder, recordingNumber, experimentNumber);
+		recordThread->setFileComponents(rootFolder, experimentNumber, recordingNumber);
 		recordThread->startThread();
 		isRecording = true;
 	}
